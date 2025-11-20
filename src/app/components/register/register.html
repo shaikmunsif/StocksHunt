@@ -1,0 +1,264 @@
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <div
+        class="mx-auto h-16 w-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mb-4 shadow-md dark:bg-purple-900"
+      >
+        <app-icon
+          iconName="register"
+          width="40"
+          height="40"
+          class="text-purple-600 dark:text-purple-300"
+        ></app-icon>
+      </div>
+      <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Create your account</h2>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Join us and start your journey</p>
+    </div>
+
+    <!-- Form Card -->
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-purple-100 dark:border-gray-700 p-8 space-y-6 dark:bg-gray-800"
+    >
+      @if (!registrationSuccess()) {
+      <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <!-- Username Field -->
+        <div>
+          <label
+            for="username"
+            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300"
+          >
+            Username
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <app-icon iconName="user" width="20" height="20" class="text-gray-400"></app-icon>
+            </div>
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              placeholder="johndoe"
+              [disabled]="isLoading()"
+              [class.border-red-500]="
+                registrationForm.get('username')?.invalid &&
+                (registrationForm.get('username')?.dirty ||
+                  registrationForm.get('username')?.touched)
+              "
+              [class.border-green-500]="
+                registrationForm.get('username')?.valid && registrationForm.get('username')?.touched
+              "
+              class="block w-full pl-10 pr-3 py-3 h-12 sm:h-auto text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          @if (registrationForm.get('username')?.invalid && (registrationForm.get('username')?.dirty
+          || registrationForm.get('username')?.touched)) {
+          <div class="mt-2 text-sm text-red-600 flex items-center">
+            <app-icon iconName="error" width="16" height="16" class="mr-1"></app-icon>
+            @if (registrationForm.get('username')?.errors?.['required']) {
+            <span>Username is required</span>
+            } @if (registrationForm.get('username')?.errors?.['minlength']) {
+            <span>Username must be at least 3 characters</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Email Field -->
+        <div>
+          <label
+            for="email"
+            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300"
+          >
+            Email Address
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <app-icon
+                iconName="email"
+                width="20"
+                height="20"
+                class="text-gray-400 dark:text-gray-500"
+              ></app-icon>
+            </div>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              placeholder="you@example.com"
+              [disabled]="isLoading()"
+              [class.border-red-500]="
+                registrationForm.get('email')?.invalid &&
+                (registrationForm.get('email')?.dirty || registrationForm.get('email')?.touched)
+              "
+              [class.border-green-500]="
+                registrationForm.get('email')?.valid && registrationForm.get('email')?.touched
+              "
+              class="block w-full pl-10 pr-3 py-3 h-12 sm:h-auto text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          @if (registrationForm.get('email')?.invalid && (registrationForm.get('email')?.dirty ||
+          registrationForm.get('email')?.touched)) {
+          <div class="mt-2 text-sm text-red-600 flex items-center">
+            <app-icon iconName="error" width="16" height="16" class="mr-1"></app-icon>
+            @if (registrationForm.get('email')?.errors?.['required']) {
+            <span>Email is required</span>
+            } @if (registrationForm.get('email')?.errors?.['email']) {
+            <span>Please enter a valid email</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label
+            for="password"
+            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300"
+          >
+            Password
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <app-icon
+                iconName="password"
+                width="20"
+                height="20"
+                class="text-gray-400 dark:text-gray-500"
+              ></app-icon>
+            </div>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              placeholder="••••••••"
+              [disabled]="isLoading()"
+              [class.border-red-500]="
+                registrationForm.get('password')?.invalid &&
+                (registrationForm.get('password')?.dirty ||
+                  registrationForm.get('password')?.touched)
+              "
+              [class.border-green-500]="
+                registrationForm.get('password')?.valid && registrationForm.get('password')?.touched
+              "
+              class="block w-full pl-10 pr-3 py-3 h-12 sm:h-auto text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          @if (registrationForm.get('password')?.invalid && (registrationForm.get('password')?.dirty
+          || registrationForm.get('password')?.touched)) {
+          <div class="mt-2 text-sm text-red-600 flex items-center">
+            <app-icon iconName="error" width="16" height="16" class="mr-1"></app-icon>
+            @if (registrationForm.get('password')?.errors?.['required']) {
+            <span>Password is required</span>
+            } @if (registrationForm.get('password')?.errors?.['minlength']) {
+            <span>Password must be at least 6 characters</span>
+            }
+          </div>
+          }
+          <p class="mt-2 text-xs text-gray-500">Must be at least 6 characters long</p>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          [disabled]="registrationForm.invalid || isLoading()"
+          [class.opacity-50]="registrationForm.invalid || isLoading()"
+          [class.cursor-not-allowed]="registrationForm.invalid || isLoading()"
+          class="w-full flex justify-center py-3 px-4 min-h-[48px] border border-transparent rounded-lg shadow-sm text-base sm:text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 transform hover:scale-[1.02] disabled:transform-none"
+        >
+          @if (!isLoading()) {
+          <app-icon iconName="register" width="20" height="20" class="mr-2"></app-icon>
+          } @if (isLoading()) {
+          <app-icon iconName="loading" width="20" height="20" class="mr-2 animate-spin"></app-icon>
+          }
+          {{ isLoading() ? 'Creating Account...' : 'Create Account' }}
+        </button>
+      </form>
+      } @else {
+      <!-- Email Confirmation Success Message -->
+      <div class="text-center space-y-6">
+        <div
+          class="mx-auto h-16 w-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center transition-colors duration-300"
+        >
+          <app-icon
+            iconName="email"
+            width="40"
+            height="40"
+            class="text-green-600 dark:text-green-300"
+          ></app-icon>
+        </div>
+
+        <div>
+          <h3
+            class="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300"
+          >
+            Check Your Email! 📧
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300 mb-4 transition-colors duration-300">
+            We've sent a confirmation email to:
+          </p>
+          <div
+            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-4 transition-colors duration-300"
+          >
+            <p class="font-mono text-sm text-gray-800 dark:text-gray-200">
+              {{ registeredEmail() }}
+            </p>
+          </div>
+          <p
+            class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300"
+          >
+            Please open your email and click the confirmation link to activate your account. After
+            confirming, you can log in with your credentials.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <button
+            (click)="resendConfirmationEmail()"
+            class="w-full flex justify-center py-2 px-4 border border-purple-300 rounded-lg shadow-sm text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
+          >
+            <app-icon iconName="email" width="16" height="16" class="mr-2"></app-icon>
+            Resend Confirmation Email
+          </button>
+
+          <button
+            (click)="goToLogin()"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
+          >
+            <app-icon iconName="login" width="16" height="16" class="mr-2"></app-icon>
+            Go to Login
+          </button>
+        </div>
+      </div>
+      } @if (errorMessage()) {
+      <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-center">
+          <app-icon iconName="close" width="20" height="20" class="text-red-400 mr-2"></app-icon>
+          <span class="text-sm text-red-700">{{ errorMessage() }}</span>
+        </div>
+      </div>
+      }
+
+      <!-- Divider -->
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-white text-gray-500">Already have an account?</span>
+        </div>
+      </div>
+
+      <!-- Login Link -->
+      <div class="text-center">
+        <a
+          routerLink="/login"
+          class="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors duration-200"
+        >
+          Sign in instead
+          <app-icon iconName="arrow-right" width="16" height="16" class="ml-1"></app-icon>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

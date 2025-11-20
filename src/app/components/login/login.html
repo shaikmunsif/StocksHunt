@@ -1,0 +1,304 @@
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <div
+        class="mx-auto h-16 w-16 bg-gradient-to-br from-indigo-100 to-blue-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mb-4 shadow-md transition-colors duration-300"
+      >
+        <app-icon
+          iconName="login"
+          width="40"
+          height="40"
+          class="text-indigo-600 dark:text-indigo-300"
+        ></app-icon>
+      </div>
+      <h2
+        class="text-3xl font-extrabold text-gray-900 dark:text-white transition-colors duration-300"
+      >
+        Welcome back
+      </h2>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
+        Sign in to your account
+      </p>
+    </div>
+
+    <!-- Form Card -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-blue-100 dark:border-gray-700 p-8 space-y-6 transition-colors duration-300"
+    >
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        @if (errorMessage()) {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex items-center">
+            <app-icon iconName="close" width="20" height="20" class="text-red-400 mr-2"></app-icon>
+            <span class="text-sm text-red-800">{{ errorMessage() }}</span>
+          </div>
+          @if (needsEmailConfirmation()) {
+          <div class="mt-3 flex space-x-2">
+            <button
+              (click)="resendConfirmationEmail()"
+              class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-md transition-colors duration-200"
+            >
+              Resend Email
+            </button>
+            <button
+              (click)="goToRegister()"
+              class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-md transition-colors duration-200"
+            >
+              Register Again
+            </button>
+          </div>
+          }
+        </div>
+        }
+        <!-- Email Field -->
+        <div>
+          <label
+            for="email"
+            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300"
+          >
+            Email Address
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <app-icon
+                iconName="email"
+                width="20"
+                height="20"
+                class="text-gray-400 dark:text-gray-500"
+              ></app-icon>
+            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              formControlName="email"
+              placeholder="you@example.com"
+              inputmode="email"
+              autocomplete="email"
+              [class.border-red-500]="
+                loginForm.get('email')?.invalid &&
+                (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)
+              "
+              [class.border-green-500]="
+                loginForm.get('email')?.valid && loginForm.get('email')?.touched
+              "
+              class="block w-full pl-10 pr-3 py-3 sm:py-3 md:py-3.5 text-base sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          @if (loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty ||
+          loginForm.get('email')?.touched)) {
+          <div class="mt-2 text-sm text-red-600 flex items-center">
+            <app-icon iconName="error" width="16" height="16" class="mr-1"></app-icon>
+            @if (loginForm.get('email')?.errors?.['required']) {
+            <span>Email is required</span>
+            } @if (loginForm.get('email')?.errors?.['email']) {
+            <span>Please enter a valid email</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label
+            for="password"
+            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300"
+          >
+            Password
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <app-icon
+                iconName="password"
+                width="20"
+                height="20"
+                class="text-gray-400 dark:text-gray-500"
+              ></app-icon>
+            </div>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              [class.border-red-500]="
+                loginForm.get('password')?.invalid &&
+                (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)
+              "
+              [class.border-green-500]="
+                loginForm.get('password')?.valid && loginForm.get('password')?.touched
+              "
+              class="block w-full pl-10 pr-3 py-3 sm:py-3 md:py-3.5 text-base sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty ||
+          loginForm.get('password')?.touched)) {
+          <div class="mt-2 text-sm text-red-600 flex items-center">
+            <app-icon iconName="error" width="16" height="16" class="mr-1"></app-icon>
+            @if (loginForm.get('password')?.errors?.['required']) {
+            <span>Password is required</span>
+            } @if (loginForm.get('password')?.errors?.['minlength']) {
+            <span>Password must be at least 6 characters</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          [disabled]="loginForm.invalid || isLoading()"
+          [class.opacity-50]="loginForm.invalid || isLoading()"
+          [class.cursor-not-allowed]="loginForm.invalid || isLoading()"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-[1.02] disabled:transform-none"
+        >
+          @if (!isLoading()) {
+          <app-icon iconName="login" width="20" height="20" class="mr-2"></app-icon>
+          } @if (isLoading()) {
+          <app-icon iconName="loading" width="20" height="20" class="mr-2 animate-spin"></app-icon>
+          }
+          {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span
+            class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors duration-300"
+            >New to SecureAuth?</span
+          >
+        </div>
+      </div>
+
+      <!-- Register Link -->
+      <div class="text-center">
+        <a
+          routerLink="/register"
+          class="inline-flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors duration-200"
+        >
+          Create an account
+          <app-icon iconName="arrow-right" width="16" height="16" class="ml-1"></app-icon>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome Message Overlay -->
+@if (showWelcomeMessage()) {
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 animate-fade-in"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-bounce-in"
+  >
+    <div class="text-center space-y-6">
+      <!-- Success Icon -->
+      <div
+        class="mx-auto h-20 w-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center animate-pulse"
+      >
+        <app-icon
+          iconName="user"
+          width="50"
+          height="50"
+          class="text-green-600 dark:text-green-300"
+        ></app-icon>
+      </div>
+
+      <!-- Welcome Message -->
+      <div>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Welcome back, {{ userName() }}! 🎉
+        </h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
+          You've successfully logged in to your account.
+        </p>
+
+        <!-- Creative Content Cards -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-4 text-center">
+            <div class="text-2xl mb-1">🚀</div>
+            <div class="text-sm font-semibold text-indigo-800">Ready to Go!</div>
+            <div class="text-xs text-indigo-600">Your dashboard awaits</div>
+          </div>
+          <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg p-4 text-center">
+            <div class="text-2xl mb-1">✨</div>
+            <div class="text-sm font-semibold text-emerald-800">All Secure</div>
+            <div class="text-xs text-emerald-600">Account protected</div>
+          </div>
+          <div class="bg-gradient-to-br from-purple-50 to-pink-100 rounded-lg p-4 text-center">
+            <div class="text-2xl mb-1">🎯</div>
+            <div class="text-sm font-semibold text-purple-800">On Track</div>
+            <div class="text-xs text-purple-600">Everything updated</div>
+          </div>
+          <div class="bg-gradient-to-br from-orange-50 to-yellow-100 rounded-lg p-4 text-center">
+            <div class="text-2xl mb-1">🌟</div>
+            <div class="text-sm font-semibold text-orange-800">Good Choice!</div>
+            <div class="text-xs text-orange-600">Thanks for staying</div>
+          </div>
+        </div>
+
+        <!-- Fun Message -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+          <p class="text-sm text-gray-700 italic">
+            "The journey of a thousand miles begins with a single login." - Ancient Proverb
+          </p>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="flex items-center justify-center space-x-2">
+          <app-icon
+            iconName="loading"
+            width="16"
+            height="16"
+            class="text-indigo-600 animate-spin"
+          ></app-icon>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes bounce-in {
+    0% {
+      transform: scale(0.3);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounce-in 0.5s ease-out;
+  }
+</style>

@@ -1,0 +1,174 @@
+@if (currentUser) {
+<!-- Mobile Header with Hamburger Menu (visible only on mobile) -->
+<div class="mobile-header">
+  <button
+    (click)="toggleMobileMenu()"
+    class="mobile-hamburger"
+    [attr.aria-label]="isMobileMenuOpen ? 'Close menu' : 'Open menu'"
+    [attr.aria-expanded]="isMobileMenuOpen"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      @if (!isMobileMenuOpen) {
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4 6h16M4 12h16M4 18h16"
+      ></path>
+      } @else {
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M6 18L18 6M6 6l12 12"
+      ></path>
+      }
+    </svg>
+  </button>
+  <div class="mobile-brand">
+    <svg class="mobile-brand-icon w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+      <path
+        d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"
+      ></path>
+    </svg>
+    <span class="mobile-brand-text">StockGainers</span>
+  </div>
+</div>
+
+<!-- Mobile Backdrop -->
+@if (isMobileMenuOpen) {
+<div class="mobile-backdrop" (click)="closeMobileMenu()" [@fadeIn]></div>
+}
+
+<div
+  class="sidebar-container"
+  [class.collapsed]="isCollapsed"
+  [class.mobile-open]="isMobileMenuOpen"
+>
+  <!-- Desktop Toggle Button (hidden on mobile) -->
+  <button
+    (click)="toggleSidebar()"
+    class="sidebar-toggle desktop-only"
+    [title]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      @if (isCollapsed) {
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      } @else {
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 19l-7-7 7-7"
+      ></path>
+      }
+    </svg>
+  </button>
+
+  <!-- Sidebar Content -->
+  <nav class="sidebar-nav">
+    <!-- Mobile Close Button (visible only on mobile when menu is open) -->
+    <button (click)="closeMobileMenu()" class="mobile-close-btn">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        ></path>
+      </svg>
+    </button>
+
+    <!-- Brand/Logo -->
+    <div class="sidebar-brand" [class.collapsed]="isCollapsed">
+      <a routerLink="/manage-data" class="brand-link" (click)="onMobileLinkClick()">
+        @if (!isCollapsed) {
+        <div class="brand-content">
+          <svg class="brand-icon w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"
+            ></path>
+          </svg>
+          <span class="brand-text">StockGainers</span>
+        </div>
+        } @else {
+        <svg class="brand-icon w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"
+          ></path>
+        </svg>
+        }
+      </a>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="sidebar-menu">
+      @for (item of getMenuItemsForUserType(); track item.route) {
+      <a
+        routerLink="{{ item.route }}"
+        class="nav-item"
+        [class.active]="item.isActive"
+        [title]="isCollapsed ? item.title : ''"
+        (click)="onMobileLinkClick()"
+      >
+        <svg class="nav-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            [attr.d]="item.icon"
+          ></path>
+        </svg>
+        @if (!isCollapsed) {
+        <span class="nav-text">{{ item.title }}</span>
+        }
+      </a>
+      }
+    </div>
+
+    <!-- User Section -->
+    <div class="sidebar-user" [class.collapsed]="isCollapsed">
+      @if (!isCollapsed) {
+      <div class="user-info">
+        <div class="user-avatar">
+          <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </div>
+        <div class="user-details">
+          <p class="user-name">{{ authService.currentUser()?.username || 'User' }}</p>
+          <p class="user-role">Administrator</p>
+        </div>
+        <button (click)="logout()" class="logout-btn" title="Logout">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      } @else {
+      <div class="user-collapsed">
+        <button (click)="logout()" class="logout-btn-collapsed" title="Logout">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      }
+    </div>
+  </nav>
+</div>
+}

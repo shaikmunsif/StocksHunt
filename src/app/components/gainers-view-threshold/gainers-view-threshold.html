@@ -1,0 +1,521 @@
+<div
+  class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gray-900 py-8 transition-colors duration-300"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header and actions -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6 transition-colors duration-300"
+    >
+      <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+            🎯 Gainers View - Threshold Wise
+          </h1>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">
+            Analyze companies that repeatedly appear across available market sessions.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button
+            (click)="refreshData()"
+            [disabled]="isLoading"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+            Refresh
+          </button>
+          <button
+            (click)="exportToCSV()"
+            [disabled]="isLoading || !repeatedCompanies.length"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-blue-100 dark:border-gray-700 p-6 mb-6 transition-colors duration-300"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="flex flex-col gap-2">
+          <label for="threshold-input" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Repeat Threshold
+          </label>
+          <input
+            id="threshold-input"
+            type="number"
+            min="1"
+            [(ngModel)]="repeatThreshold"
+            (change)="onRepeatThresholdChange()"
+            class="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+          />
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Companies appearing more than this value are included.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="exchange-mode" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Exchange Mode
+          </label>
+          <select
+            id="exchange-mode"
+            [(ngModel)]="exchangeMode"
+            (change)="onExchangeModeChange()"
+            class="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
+          >
+            <option value="all">All Exchanges</option>
+            <option value="one">Specific Exchange</option>
+            <option value="none">No Exchange Filter</option>
+          </select>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Current setting: {{ getExchangeModeLabel() }}.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="exchange-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Exchange Selection
+          </label>
+          <select
+            id="exchange-select"
+            [(ngModel)]="selectedExchange"
+            (change)="onExchangeChange()"
+            [disabled]="exchangeMode !== 'one'"
+            class="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm disabled:bg-slate-100 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-500"
+          >
+            <option *ngFor="let exchange of exchanges" [value]="exchange">{{ exchange }}</option>
+          </select>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Choose an exchange when "Specific Exchange" is enabled.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div
+      *ngIf="isLoading"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 transition-colors duration-300"
+    >
+      <div class="flex flex-col items-center gap-4">
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"
+        ></div>
+        <p class="text-gray-600 dark:text-gray-400">
+          Analyzing market data across {{ availableDates.length }} dates…
+        </p>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div
+      *ngIf="error && !isLoading"
+      class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
+    >
+      <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
+      <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
+    </div>
+
+    <!-- Results table -->
+    <div
+      *ngIf="!isLoading && !error"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
+    >
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Repeated Companies</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Found {{ repeatedCompanies.length }} companies appearing more than
+          {{ repeatThreshold }} times.
+        </p>
+      </div>
+
+      <!-- Mobile Card View -->
+      <div class="mobile-card-view">
+        <ng-container *ngIf="repeatedCompanies.length; else mobileEmptyState">
+          <div
+            *ngFor="let company of repeatedCompanies; let i = index; trackBy: trackByCompany"
+            class="mobile-card"
+          >
+            <div class="mobile-card-header">
+              <div class="mobile-card-title">
+                <a
+                  class="text-blue-600 dark:text-blue-400 font-semibold text-base"
+                  [href]="'https://www.screener.in/company/' + company.ticker_symbol"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ company.ticker_symbol }}
+                </a>
+                <span
+                  class="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                >
+                  {{ company.occurrenceCount || 0 }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                {{ company.name || 'N/A' }}
+              </p>
+            </div>
+
+            <div class="mobile-card-body">
+              <div class="mobile-card-row">
+                <span class="mobile-card-label">Latest Price:</span>
+                <span class="mobile-card-value">{{ formatPrice(company.latestPrice) }}</span>
+              </div>
+              <div class="mobile-card-row">
+                <span class="mobile-card-label">Avg Change:</span>
+                <span class="mobile-card-value" [ngClass]="getChangeClass(company.averageChange)">
+                  {{ formatChange(company.averageChange) }}
+                </span>
+              </div>
+              <div class="mobile-card-row">
+                <span class="mobile-card-label">Category:</span>
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                >
+                  {{ company.category?.name || 'N/A' }}
+                </span>
+              </div>
+              @if (company.comments) {
+              <div class="mobile-card-row-full">
+                <span class="mobile-card-label">Comments:</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ company.comments }}</span>
+              </div>
+              }
+            </div>
+
+            <div class="mobile-card-actions">
+              <button
+                (click)="editRow(company, i)"
+                class="mobile-action-btn mobile-action-btn-primary"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span>Edit Details</span>
+              </button>
+              @if (company.comments) {
+              <button
+                (click)="editComment(company)"
+                class="mobile-action-btn mobile-action-btn-secondary"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span>Edit Comment</span>
+              </button>
+              } @else {
+              <button
+                (click)="addComment(company)"
+                class="mobile-action-btn mobile-action-btn-secondary"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <span>Add Comment</span>
+              </button>
+              }
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #mobileEmptyState>
+          <div class="mobile-empty-state">
+            <svg class="mobile-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"
+              ></path>
+            </svg>
+            <h3 class="mt-2 text-base font-medium text-gray-900 dark:text-white">
+              No repeated companies found
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Try lowering the threshold value to broaden the results.
+            </p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="overflow-x-auto desktop-table-view">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700/50">
+            <tr>
+              <th (click)="onSort('ticker_symbol')" class="sortable-header">
+                <div class="sortable-header-content">
+                  <span>Ticker</span>
+                  <svg class="sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      [attr.d]="getSortIcon('ticker_symbol')"
+                    ></path>
+                  </svg>
+                </div>
+              </th>
+              <th (click)="onSort('name')" class="sortable-header">
+                <div class="sortable-header-content">
+                  <span>Company</span>
+                  <svg class="sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      [attr.d]="getSortIcon('name')"
+                    ></path>
+                  </svg>
+                </div>
+              </th>
+              <th (click)="onSort('current_price')" class="sortable-header">
+                <div class="sortable-header-content">
+                  <span>Latest Price</span>
+                  <svg class="sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      [attr.d]="getSortIcon('current_price')"
+                    ></path>
+                  </svg>
+                </div>
+              </th>
+              <th (click)="onSort('average_change')" class="sortable-header">
+                <div class="sortable-header-content">
+                  <span>Average Change %</span>
+                  <svg class="sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      [attr.d]="getSortIcon('average_change')"
+                    ></path>
+                  </svg>
+                </div>
+              </th>
+              <th (click)="onSort('category')" class="sortable-header">
+                <div class="sortable-header-content">
+                  <span>Category</span>
+                  <svg class="sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      [attr.d]="getSortIcon('category')"
+                    ></path>
+                  </svg>
+                </div>
+              </th>
+              <th (click)="onSort('occurrence_count')" class="sortable-header">
+                <div class="sortable-header-content">
+                  <span>Occurrences</span>
+                  <svg class="sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      [attr.d]="getSortIcon('occurrence_count')"
+                    ></path>
+                  </svg>
+                </div>
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Comments
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <ng-container *ngIf="repeatedCompanies.length; else emptyState">
+              <tr
+                *ngFor="let company of repeatedCompanies; let i = index; trackBy: trackByCompany"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
+              >
+                <td class="table-cell-text">
+                  <a
+                    class="text-blue-600 hover:underline dark:text-blue-400"
+                    [href]="'https://www.screener.in/company/' + company.ticker_symbol"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {{ company.ticker_symbol }}
+                  </a>
+                </td>
+                <td class="table-cell-text">{{ company.name || 'N/A' }}</td>
+                <td class="table-cell-text">{{ formatPrice(company.latestPrice) }}</td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-sm"
+                  [ngClass]="getChangeClass(company.averageChange)"
+                >
+                  {{ formatChange(company.averageChange) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                  <span
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                  >
+                    {{ company.category?.name || 'N/A' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                  <span
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  >
+                    {{ company.occurrenceCount || 0 }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  @if (company.comments) {
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="text-gray-700 dark:text-gray-300 truncate max-w-xs"
+                      [title]="company.comments"
+                    >
+                      {{ company.comments }}
+                    </span>
+                    <button
+                      (click)="editComment(company)"
+                      class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      title="Edit comment"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  } @else {
+                  <button
+                    (click)="addComment(company)"
+                    class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    title="Add comment"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </button>
+                  }
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button
+                    (click)="editRow(company, i)"
+                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                    title="Edit company details"
+                  >
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            </ng-container>
+            <ng-template #emptyState>
+              <tr>
+                <td colspan="8" class="px-6 py-12 text-center">
+                  <svg
+                    class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"
+                    ></path>
+                  </svg>
+                  <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                    No repeated companies found
+                  </h3>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Try lowering the threshold value to broaden the results.
+                  </p>
+                </td>
+              </tr>
+            </ng-template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .sortable-header {
+    @apply px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150;
+  }
+
+  .sortable-header-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .sort-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .table-cell-text {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200;
+  }
+</style>

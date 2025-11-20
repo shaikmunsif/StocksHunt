@@ -1,0 +1,46 @@
+{
+  "schema_name": "public",
+  "tables": [
+    {
+      "name": "exchanges",
+      "purpose": "Lookup for stock markets (e.g., NSE, BSE).",
+      "columns": [
+        { "name": "id", "type": "bigint", "is_pk": true },
+        { "name": "code", "type": "text", "is_unique": true }
+      ]
+    },
+    {
+      "name": "categories",
+      "purpose": "Lookup for industry sectors (e.g., Tech, Finance).",
+      "columns": [
+        { "name": "id", "type": "bigint", "is_pk": true },
+        { "name": "name", "type": "text", "is_unique": true }
+      ]
+    },
+    {
+      "name": "companies",
+      "purpose": "Static company information.",
+      "columns": [
+        { "name": "id", "type": "uuid", "is_pk": true },
+        { "name": "ticker_symbol", "type": "text", "is_unique": true },
+        { "name": "name", "type": "text" },
+        { "name": "exchange_id", "type": "bigint", "is_fk": true, "ref": "exchanges.id" },
+        { "name": "category_id", "type": "bigint", "is_fk": true, "ref": "categories.id" },
+        { "name": "updated_by", "type": "uuid", "is_fk": true, "ref": "auth.users.id" }
+      ]
+    },
+    {
+      "name": "market_data",
+      "purpose": "Daily financial metrics (time-series).",
+      "columns": [
+        { "name": "id", "type": "bigint", "is_pk": true },
+        { "name": "company_id", "type": "uuid", "is_fk": true, "ref": "companies.id" },
+        { "name": "record_date", "type": "date" },
+        { "name": "current_price", "type": "numeric(10, 2)" },
+        { "name": "percentage_change", "type": "numeric(5, 2)" },
+        { "name": "updated_by", "type": "uuid", "is_fk": true, "ref": "auth.users.id" }
+      ],
+      "constraints": [{ "type": "unique", "fields": ["company_id", "record_date"] }]
+    }
+  ]
+}
