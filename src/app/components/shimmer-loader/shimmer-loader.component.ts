@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,12 +8,14 @@ import { CommonModule } from '@angular/common';
   templateUrl: './shimmer-loader.component.html',
   styleUrl: './shimmer-loader.component.scss',
 })
-export class ShimmerLoaderComponent {
+export class ShimmerLoaderComponent implements OnChanges {
   @Input() type: 'table' | 'card' | 'text' | 'full-page' = 'card';
   @Input() rows: number = 5;
   @Input() showHeader: boolean = true;
 
-  get rowArray(): number[] {
-    return Array(this.rows).fill(0);
+  rowArray: number[] = [];
+
+  ngOnChanges(): void {
+    this.rowArray = Array(this.rows).fill(0);
   }
 }

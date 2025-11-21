@@ -21,6 +21,8 @@ export class StockGainersComponent implements OnInit {
   private stockService = inject(StockService);
   private databaseService = inject(DatabaseService);
 
+  private readonly PROGRESS_DISPLAY_DELAY_MS = 500;
+
   // Legacy properties for backward compatibility
   stockData: StockGainersResponse = { date: '', stocks: [] };
   dateInput: string = ''; // Will be set to today's date in ngOnInit
@@ -94,7 +96,7 @@ export class StockGainersComponent implements OnInit {
     } finally {
       setTimeout(() => {
         this.isSaving = false;
-      }, 500); // Keep showing final progress briefly
+      }, this.PROGRESS_DISPLAY_DELAY_MS); // Keep showing final progress briefly
     }
   }
 

@@ -269,7 +269,7 @@ export class DatabaseService {
 
       const updateProgress = (message: string) => {
         currentStep++;
-        const progress = Math.round((currentStep / totalSteps) * 100);
+        const progress = Math.min(Math.round((currentStep / totalSteps) * 100), 100);
         if (progressCallback) {
           progressCallback(progress, message);
         }
