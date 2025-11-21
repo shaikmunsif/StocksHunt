@@ -4,11 +4,10 @@
   
   # Output directory - Angular outputs to dist/stocks-pulse by default
   publish = "dist/stocks-pulse/browser"
-  
-  # Set Node.js version (recommended for consistency)
-  environment = { NODE_VERSION = "20" }
 
 [build.environment]
+  # Node.js version
+  NODE_VERSION = "20"
   # Netlify will inject your environment variables here
   # Make sure to set SUPABASE_URL and SUPABASE_KEY in Netlify dashboard
 
