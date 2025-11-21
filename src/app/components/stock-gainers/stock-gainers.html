@@ -91,7 +91,7 @@
             class="w-full sm:w-auto px-6 py-3 min-h-[48px] text-base sm:text-sm bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span *ngIf="!isSaving">Save to Database</span>
-            <span *ngIf="isSaving">Saving...</span>
+            <span *ngIf="isSaving">Saving {{ saveProgress }}%...</span>
           </button>
           <button
             (click)="clearData()"
@@ -99,6 +99,20 @@
           >
             Clear
           </button>
+        </div>
+
+        <!-- Save Progress Indicator -->
+        <div *ngIf="isSaving && saveProgress > 0" class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">{{ saveProgressMessage }}</span>
+            <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ saveProgress }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div
+              class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
+              [style.width.%]="saveProgress"
+            ></div>
+          </div>
         </div>
       </div>
     </div>
@@ -127,7 +141,7 @@
             class="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span *ngIf="!isSaving">Save to Database</span>
-            <span *ngIf="isSaving">Saving...</span>
+            <span *ngIf="isSaving">Saving {{ saveProgress }}%...</span>
           </button>
           <button
             (click)="clearData()"
@@ -135,6 +149,20 @@
           >
             Clear & Start Over
           </button>
+        </div>
+      </div>
+
+      <!-- Save Progress Indicator -->
+      <div *ngIf="isSaving && saveProgress > 0" class="mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">{{ saveProgressMessage }}</span>
+          <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ saveProgress }}%</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+          <div
+            class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
+            [style.width.%]="saveProgress"
+          ></div>
         </div>
       </div>
 

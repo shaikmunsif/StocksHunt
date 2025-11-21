@@ -28,12 +28,15 @@ export class StockGainersComponent implements OnInit {
   showData: boolean = false;
   isSaving: boolean = false;
   saveMessage: string = '';
+  saveProgress: number = 0;
+  saveProgressMessage: string = '';
 
   // New properties for database structure
   marketData: MarketDataResponse = { date: '', companies: [] };
   availableDates: string[] = [];
   selectedDate: string = '';
   showHistoricalData: boolean = false;
+  isLoadingHistorical: boolean = false;
 
   // Exchange selection
   selectedExchange: string = 'NSE'; // Default to NSE
@@ -60,18 +63,28 @@ export class StockGainersComponent implements OnInit {
 
     this.isSaving = true;
     this.saveMessage = '';
+    this.saveProgress = 0;
+    this.saveProgressMessage = '';
 
     try {
       const success = await this.stockService.saveToDatabase(
         this.tableInput,
         this.dateInput,
-        this.selectedExchange
+        this.selectedExchange,
+        (progress: number, message: string) => {
+          this.saveProgress = progress;
+          this.saveProgressMessage = message;
+        }
       );
 
       if (success) {
         this.saveMessage = 'Data saved successfully to database!';
+        this.saveProgress = 100;
+        this.saveProgressMessage = 'Complete!';
         setTimeout(() => {
           this.saveMessage = '';
+          this.saveProgress = 0;
+          this.saveProgressMessage = '';
         }, 3000);
         await this.loadAvailableDates(); // Refresh available dates
       } else {
@@ -80,7 +93,9 @@ export class StockGainersComponent implements OnInit {
     } catch (error) {
       this.saveMessage = 'Error saving data. Please try again.';
     } finally {
-      this.isSaving = false;
+      setTimeout(() => {
+        this.isSaving = false;
+      }, 500); // Keep showing final progress briefly
     }
   }
 
@@ -98,12 +113,15 @@ export class StockGainersComponent implements OnInit {
   async loadMarketDataForDate(): Promise<void> {
     if (!this.selectedDate) return;
 
+    this.isLoadingHistorical = true;
     try {
       this.marketData = await this.stockService.getMarketData(this.selectedDate);
       this.showHistoricalData = true;
     } catch (error) {
       console.error('Error loading market data:', error);
       this.marketData = { date: this.selectedDate, companies: [] };
+    } finally {
+      this.isLoadingHistorical = false;
     }
   }
 

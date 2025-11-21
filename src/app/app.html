@@ -21,7 +21,12 @@
       [class.mx-auto]="authService.isAuthenticated()"
       [class.mobile-padding-top]="authService.isAuthenticated()"
     >
-      <router-outlet></router-outlet>
+      <!-- Shimmer loader for lazy-loaded components -->
+      @if (isLoadingRoute) {
+        <app-shimmer-loader type="full-page" [rows]="8"></app-shimmer-loader>
+      } @else {
+        <router-outlet></router-outlet>
+      }
     </main>
 
     @if (authService.isAuthenticated()) {

@@ -1,0 +1,29 @@
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+:host ::ng-deep .animate-pulse > * > * {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    #f0f0f0 8%,
+    #f8f8f8 18%,
+    #f0f0f0 33%
+  );
+  background-size: 800px 104px;
+}
+
+:host-context(.dark) ::ng-deep .animate-pulse > * > * {
+  background: linear-gradient(
+    to right,
+    #374151 8%,
+    #4b5563 18%,
+    #374151 33%
+  );
+  background-size: 800px 104px;
+}
