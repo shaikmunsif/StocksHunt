@@ -187,8 +187,10 @@
             <tr
               *ngFor="let stock of stockData.stocks; trackBy: trackByStock"
               class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
-              [class.bg-green-50]="stock.changePercent > 10"
-              [class.bg-green-25]="stock.changePercent > 5 && stock.changePercent <= 10"
+              [class.bg-green-100]="stock.changePercent > 10"
+              [class.dark:bg-green-900/20]="stock.changePercent > 10"
+              [class.bg-green-50]="stock.changePercent > 5 && stock.changePercent <= 10"
+              [class.dark:bg-green-900/10]="stock.changePercent > 5 && stock.changePercent <= 10"
             >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">
