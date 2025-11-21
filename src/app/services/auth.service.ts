@@ -1,6 +1,6 @@
 import { Injectable, signal, OnDestroy } from '@angular/core';
 import { AuthResponse, createClient, User } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/environment';
 import { from, Observable, of, BehaviorSubject } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 
