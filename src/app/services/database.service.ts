@@ -264,7 +264,8 @@ export class DatabaseService {
     progressCallback?: (progress: number, message: string) => void
   ): Promise<boolean> {
     try {
-      const totalSteps = parsedData.length + 2; // +2 for exchange and category setup
+      const SETUP_STEPS = 2; // Exchange and category setup
+      const totalSteps = parsedData.length + SETUP_STEPS;
       let currentStep = 0;
 
       const updateProgress = (message: string) => {
