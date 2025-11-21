@@ -1,10 +1,11 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService } from '../../services/auth.service';
 import { LayoutService } from '../../services/layout.service';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
+import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sidebar',
@@ -22,10 +23,11 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
     ]),
   ],
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   isMobileMenuOpen = false;
   private touchStartX = 0;
   private touchStartY = 0;
+  private routerSubscription?: Subscription;
   menuItems = [
     {
       title: 'Add Stock Data',
@@ -63,6 +65,17 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.updateActiveStates();
+
+    // Subscribe to router events to update active states on navigation
+    this.routerSubscription = this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.updateActiveStates();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSubscription?.unsubscribe();
   }
 
   toggleSidebar(): void {
@@ -122,5 +135,37 @@ export class SidebarComponent implements OnInit {
         this.router.navigate(['/login']);
       },
     });
+  }
+
+  // Touch event handlers for mobile swipe
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    if (window.innerWidth >= 1024) return; // Only on mobile
+
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
+    if (window.innerWidth >= 1024) return; // Only on mobile
+
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+
+    const deltaX = touchEndX - this.touchStartX;
+    const deltaY = touchEndY - this.touchStartY;
+
+    // Check if horizontal swipe is dominant
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      if (deltaX > 0 && this.touchStartX < 50) {
+        // Swipe right from left edge - open menu
+        this.isMobileMenuOpen = true;
+        document.body.style.overflow = 'hidden';
+      } else if (deltaX < 0 && this.isMobileMenuOpen) {
+        // Swipe left when menu is open - close menu
+        this.closeMobileMenu();
+      }
+    }
   }
 }

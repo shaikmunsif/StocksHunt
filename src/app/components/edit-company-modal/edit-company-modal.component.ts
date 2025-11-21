@@ -22,7 +22,11 @@ Chart.register(...registerables);
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="max-h-[85vh] overflow-y-auto">
+    <div
+      class="max-h-[85vh] overflow-y-auto"
+      (touchstart)="onTouchStart($event)"
+      (touchend)="onTouchEnd($event)"
+    >
       <div class="sm:flex sm:items-start mb-4">
         <div
           class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-10 sm:w-10"
@@ -364,6 +368,8 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   historicalData = signal<MarketData[]>([]);
 
   private chart?: Chart;
+  private touchStartX = 0;
+  private touchStartY = 0;
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
   readonly breakpoint = inject(BreakpointService);
@@ -627,5 +633,32 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
 
     // Reload historical data for new company
     this.loadHistoricalData();
+  }
+
+  // Touch event handlers for mobile swipe navigation
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  onTouchEnd(event: TouchEvent): void {
+    if (!event.changedTouches.length) return;
+
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+
+    const deltaX = touchEndX - this.touchStartX;
+    const deltaY = touchEndY - this.touchStartY;
+
+    // Check if horizontal swipe is dominant (more horizontal than vertical)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      if (deltaX > 0 && this.currentIndex > 0) {
+        // Swipe right - go to previous
+        this.navigatePrevious();
+      } else if (deltaX < 0 && this.currentIndex < this.companiesList.length - 1) {
+        // Swipe left - go to next
+        this.navigateNext();
+      }
+    }
   }
 }

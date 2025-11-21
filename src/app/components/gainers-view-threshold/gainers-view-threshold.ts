@@ -23,6 +23,7 @@ import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-mo
 })
 export class GainersViewThresholdComponent implements OnInit {
   isLoading = false;
+  loadingProgress = 0;
   error: string | null = null;
   availableDates: string[] = [];
 
@@ -69,13 +70,20 @@ export class GainersViewThresholdComponent implements OnInit {
     }
 
     this.isLoading = true;
+    this.loadingProgress = 0;
     this.error = null;
 
     try {
       const aggregatedCompanies: CompanyWithMarketData[] = [];
+      const totalDates = this.availableDates.length;
 
-      for (const date of this.availableDates) {
+      for (let i = 0; i < this.availableDates.length; i++) {
+        const date = this.availableDates[i];
         const data: MarketDataResponse = await this.databaseService.getMarketDataByDate(date);
+
+        // Update progress
+        this.loadingProgress = Math.round(((i + 1) / totalDates) * 100);
+
         if (!data?.companies?.length) {
           continue;
         }
@@ -92,6 +100,7 @@ export class GainersViewThresholdComponent implements OnInit {
       this.repeatedCompanies = [];
     } finally {
       this.isLoading = false;
+      this.loadingProgress = 0;
     }
   }
 

@@ -20,6 +20,7 @@ import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-mo
 export class GainersViewDateComponent implements OnInit {
   marketData: MarketDataResponse | null = null;
   isLoading = false;
+  loadingProgress = 0;
   error: string | null = null;
   selectedDate: string = '';
   selectedExchange: string = 'NSE';
@@ -80,11 +81,14 @@ export class GainersViewDateComponent implements OnInit {
     }
 
     this.isLoading = true;
+    this.loadingProgress = 0;
     this.error = null;
 
     try {
+      this.loadingProgress = 30;
       const data = await this.databaseService.getMarketDataByDate(this.selectedDate);
 
+      this.loadingProgress = 60;
       // Filter by selected exchange
       if (data.companies) {
         data.companies = data.companies.filter(
@@ -97,13 +101,18 @@ export class GainersViewDateComponent implements OnInit {
 
       this.marketData = data;
 
+      this.loadingProgress = 80;
       // Load occurrence counts for all companies
-      await this.loadOccurrenceCounts(data.companies || []);
+      if (data.companies) {
+        await this.loadOccurrenceCounts(data.companies);
+      }
+      this.loadingProgress = 100;
     } catch (error) {
       console.error('Error loading market data:', error);
       this.error = 'Failed to load market data. Please try again.';
     } finally {
       this.isLoading = false;
+      this.loadingProgress = 0;
     }
   }
 
@@ -297,9 +306,15 @@ export class GainersViewDateComponent implements OnInit {
 
   async loadOccurrenceCounts(companies: CompanyWithMarketData[]): Promise<void> {
     this.occurrenceCounts.clear();
-    for (const company of companies) {
+    const totalCompanies = companies.length;
+
+    for (let i = 0; i < companies.length; i++) {
+      const company = companies[i];
       const count = await this.databaseService.getCompanyOccurrenceCount(company.ticker_symbol);
       this.occurrenceCounts.set(company.ticker_symbol, count);
+
+      // Update progress: 80% (base) + (20% * progress through companies)
+      this.loadingProgress = 80 + Math.round(((i + 1) / totalCompanies) * 20);
     }
   }
 
