@@ -13,9 +13,7 @@ import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
 import { CompanyWithMarketData, MarketData } from '../../interfaces/stock-data.interface';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
-
-Chart.register(...registerables);
+import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
 
 @Component({
   selector: 'app-edit-company-modal',
@@ -88,9 +86,7 @@ Chart.register(...registerables);
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Change:</span>
-            <span class="text-sm font-semibold" [ngClass]="changeClass">{{
-              percentageChange
-            }}</span>
+            <span class="text-sm font-semibold" [class]="changeClass">{{ percentageChange }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Occurrences:</span>
@@ -135,7 +131,11 @@ Chart.register(...registerables);
           <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
             Price History ({{ historicalData().length }} records)
           </h4>
-          <div [ngClass]="breakpoint.isMobile() ? 'h-[200px]' : 'h-64'" class="relative">
+          <div
+            class="relative"
+            [class.h-[200px]]="breakpoint.isMobile()"
+            [class.h-64]="!breakpoint.isMobile()"
+          >
             <canvas #priceChart></canvas>
           </div>
 
@@ -184,7 +184,13 @@ Chart.register(...registerables);
                   </td>
                   <td
                     class="px-3 py-2 text-xs text-right font-semibold"
-                    [ngClass]="getChangeClass(data.percentage_change)"
+                    [class.text-green-600]="(data.percentage_change ?? 0) >= 0"
+                    [class.text-red-600]="(data.percentage_change ?? 0) < 0"
+                    [class.dark:text-green-400]="(data.percentage_change ?? 0) >= 0"
+                    [class.dark:text-red-400]="(data.percentage_change ?? 0) < 0"
+                    [class.text-gray-500]="
+                      data.percentage_change === undefined || data.percentage_change === null
+                    "
                   >
                     {{ formatChange(data.percentage_change) }}
                   </td>
@@ -403,11 +409,15 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     }
   }
 
-  createChart() {
+  async createChart() {
     if (!this.priceChartRef?.nativeElement) {
       console.warn('Canvas element not found');
       return;
     }
+
+    // Dynamically import Chart.js only when needed
+    const { Chart, registerables } = await import('chart.js');
+    Chart.register(...registerables);
 
     const data = this.historicalData();
     const labels = data.map((d) => this.formatDate(d.record_date));
@@ -416,7 +426,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     const isDark = document.documentElement.classList.contains('dark');
     const isMobile = this.breakpoint.isMobile();
 
-    const config: ChartConfiguration = {
+    const config: ChartConfiguration<'line'> = {
       type: 'line',
       data: {
         labels: labels,
@@ -475,7 +485,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
               size: isMobile ? 11 : 13,
             },
             callbacks: {
-              label: (context) => {
+              label: (context: TooltipItem<'line'>) => {
                 let label = context.dataset.label || '';
                 if (label) {
                   label += ': ';

@@ -192,7 +192,12 @@
               </div>
               <div class="mobile-card-row">
                 <span class="mobile-card-label">Avg Change:</span>
-                <span class="mobile-card-value" [ngClass]="getChangeClass(company.averageChange)">
+                <span
+                  class="mobile-card-value"
+                  [class.text-green-600]="company.averageChange >= 0"
+                  [class.text-red-600]="company.averageChange < 0"
+                  [class.font-semibold]="true"
+                >
                   {{ formatChange(company.averageChange) }}
                 </span>
               </div>
@@ -397,7 +402,9 @@
                 <td class="table-cell-text">{{ formatPrice(company.latestPrice) }}</td>
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm"
-                  [ngClass]="getChangeClass(company.averageChange)"
+                  [class.text-green-600]="company.averageChange >= 0"
+                  [class.text-red-600]="company.averageChange < 0"
+                  [class.font-semibold]="true"
                 >
                   {{ formatChange(company.averageChange) }}
                 </td>
