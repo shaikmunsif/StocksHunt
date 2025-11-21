@@ -2,8 +2,8 @@
   # Build command - runs the production build
   command = "npm run build"
   
-  # Output directory - Angular outputs to dist/stocks-pulse by default
-  publish = "dist/stocks-pulse/browser"
+  # Output directory - Angular outputs to dist/StocksPulse by default
+  publish = "dist/StocksPulse/browser"
 
 [build.environment]
   # Node.js version
