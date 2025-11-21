@@ -8,7 +8,15 @@ import { map, distinctUntilChanged } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class AuthService implements OnDestroy {
-  supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+  supabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
+    auth: {
+      storageKey: 'sb-auth-token',
+      storage: window.localStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+  });
   currentUser = signal<{ email: string; username: string } | null>(null);
   isEmailConfirmed = signal(false);
 
@@ -65,10 +73,12 @@ export class AuthService implements OnDestroy {
   }
 
   register(email: string, username: string, password: string): Observable<AuthResponse> {
+    const redirectUrl = window.location.origin + '/login';
     const promise = this.supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           username,
         },
