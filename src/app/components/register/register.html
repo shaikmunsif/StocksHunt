@@ -240,12 +240,15 @@
       }
 
       <!-- Divider -->
-      <div class="relative">
+      <div class="relative my-6">
         <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-300"></div>
+          <div class="w-full border-t border-gray-200 dark:border-gray-600"></div>
         </div>
-        <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-white text-gray-500">Already have an account?</span>
+        <div class="relative flex justify-center">
+          <span
+            class="px-4 py-1 bg-white dark:bg-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400 rounded-full transition-colors duration-300"
+            >Already have an account?</span
+          >
         </div>
       </div>
 
@@ -253,10 +256,21 @@
       <div class="text-center">
         <a
           routerLink="/login"
-          class="inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-500 transition-colors duration-200"
+          class="group relative inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 overflow-hidden"
         >
-          Sign in instead
-          <app-icon iconName="arrow-right" width="16" height="16" class="ml-1"></app-icon>
+          <span
+            class="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          ></span>
+          <span class="relative flex items-center">
+            <app-icon iconName="login" width="18" height="18" class="mr-2"></app-icon>
+            Sign in instead
+            <app-icon
+              iconName="arrow-right"
+              width="18"
+              height="18"
+              class="ml-2 group-hover:translate-x-1 transition-transform duration-200"
+            ></app-icon>
+          </span>
         </a>
       </div>
     </div>

@@ -196,7 +196,16 @@
                 <span class="mobile-card-label">Change:</span>
                 <span
                   class="mobile-card-value"
-                  [ngClass]="getChangeClass(company.market_data?.percentage_change)"
+                  [class.text-green-600]="(company.market_data?.percentage_change ?? 0) >= 0"
+                  [class.text-red-600]="(company.market_data?.percentage_change ?? 0) < 0"
+                  [class.font-semibold]="
+                    company.market_data?.percentage_change !== undefined &&
+                    company.market_data?.percentage_change !== null
+                  "
+                  [class.text-gray-500]="
+                    company.market_data?.percentage_change === undefined ||
+                    company.market_data?.percentage_change === null
+                  "
                 >
                   {{ formatChange(company.market_data?.percentage_change) }}
                 </span>
@@ -424,7 +433,16 @@
                 </td>
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm"
-                  [ngClass]="getChangeClass(company.market_data?.percentage_change)"
+                  [class.text-green-600]="(company.market_data?.percentage_change ?? 0) >= 0"
+                  [class.text-red-600]="(company.market_data?.percentage_change ?? 0) < 0"
+                  [class.font-semibold]="
+                    company.market_data?.percentage_change !== undefined &&
+                    company.market_data?.percentage_change !== null
+                  "
+                  [class.text-gray-500]="
+                    company.market_data?.percentage_change === undefined ||
+                    company.market_data?.percentage_change === null
+                  "
                 >
                   {{ formatChange(company.market_data?.percentage_change) }}
                 </td>
