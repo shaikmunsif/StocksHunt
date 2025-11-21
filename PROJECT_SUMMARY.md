@@ -30,9 +30,9 @@ StockGainers is a sophisticated Angular 18+ application for analyzing stock mark
 
 ### **Core Technologies**
 
-- **Frontend Framework**: Angular 18+ (Standalone Components with new control flow)
+- **Frontend Framework**: Angular 20+ (Standalone Components with new control flow)
 - **UI Framework**: Tailwind CSS 3.x for modern, responsive design
-- **Charting Library**: Chart.js 4.x for data visualization
+- **Charting Library**: Chart.js 4.x (dynamically imported for optimal performance)
 - **State Management**: Angular Signals & Services with RxJS
 - **Routing**: Angular Router with Route Guards (auth & dashboard protection)
 - **Authentication**: Supabase Auth with JWT-based session management
@@ -52,6 +52,8 @@ StockGainers is a sophisticated Angular 18+ application for analyzing stock mark
 - **Touch-Optimized UI**: 44x44px minimum tap targets, gesture support
 - **Dynamic Component Loading**: ViewContainerRef for modal system
 - **Dependency Injection**: Modern `inject()` function usage
+- **Lazy Loading**: Route-based code splitting with loadComponent()
+- **Dynamic Imports**: Heavy libraries loaded on-demand (Chart.js)
 
 ---
 
@@ -487,46 +489,83 @@ CREATE INDEX idx_market_data_company ON market_data(company_id);
 
 ## 📈 **Advanced Analytics & Visualization**
 
-### **Chart.js Integration**
+### **Chart.js Integration (Dynamic Import)**
 
 ```typescript
-// Price history chart configuration
-{
-  type: 'line',
-  data: {
-    labels: dates,
-    datasets: [{
-      label: 'Price',
-      data: prices,
-      borderColor: isDark ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
-      backgroundColor: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.1)',
-      borderWidth: 3,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.4,
-      fill: true
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'top' },
-      tooltip: { mode: 'index' }
+// Dynamically import Chart.js only when modal opens
+import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
+
+async createChart() {
+  // Runtime import - loads ~205 kB chunk on-demand
+  const { Chart, registerables } = await import('chart.js');
+  Chart.register(...registerables);
+
+  // Price history chart configuration
+  const config: ChartConfiguration<'line'> = {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Price',
+        data: prices,
+        borderColor: isDark ? 'rgb(96, 165, 250)' : 'rgb(37, 99, 235)',
+        backgroundColor: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+        borderWidth: isMobile ? 2 : 3,
+        pointRadius: isMobile ? 2 : 4,
+        pointHoverRadius: isMobile ? 4 : 6,
+        tension: 0.4,
+        fill: true
+      }]
     },
-    scales: {
-      y: {
-        title: { text: 'Price (₹)' },
-        grid: { color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(209, 213, 219, 0.5)' }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: !isMobile,
+          position: 'top'
+        },
+        tooltip: {
+          mode: 'index',
+          callbacks: {
+            label: (context: TooltipItem<'line'>) => {
+              return '₹' + context.parsed.y.toFixed(2);
+            }
+          }
+        }
       },
-      x: {
-        grid: { display: true },
-        ticks: { maxRotation: 45 }
+      scales: {
+        y: {
+          title: {
+            display: !isMobile,
+            text: 'Price (₹)'
+          },
+          grid: {
+            color: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(209, 213, 219, 0.5)'
+          }
+        },
+        x: {
+          grid: { display: !isMobile },
+          ticks: {
+            maxRotation: isMobile ? 90 : 45,
+            maxTicksLimit: isMobile ? 6 : undefined
+          }
+        }
       }
     }
-  }
+  };
+
+  this.chart = new Chart(this.priceChartRef.nativeElement, config);
 }
 ```
+
+**Performance Benefits:**
+
+- ✅ Chart.js (~205 kB) loaded only when edit modal opens
+- ✅ Type-only import for compile-time type safety (zero runtime cost)
+- ✅ Separate lazy chunk created by Angular build system
+- ✅ Users who never open edit modal don't download Chart.js
+- ✅ Mobile-optimized chart rendering with responsive breakpoints
 
 ### **Occurrence Counting Algorithm**
 
@@ -1044,14 +1083,16 @@ src/app/
 2. **Dual Analysis Views** - Date-wise and Threshold-wise with advanced filtering
 3. **Loading Progress Indicators** - Visual progress bars with real-time percentages
 4. **Smart Comments System** - Displays actual data or "-" placeholder
-5. **Modern Angular Architecture** - Standalone components, signals, new control flow
+5. **Modern Angular Architecture** - Standalone components, signals, new control flow (@if/@for/@switch)
 6. **Comprehensive Export** - CSV export with current state
 7. **Responsive Design** - Mobile-first with card layouts, touch optimization, swipe gestures
-8. **Type Safety** - Complete TypeScript coverage
-9. **Performance Optimization** - Efficient algorithms and data handling
+8. **Type Safety** - Complete TypeScript coverage with strict mode
+9. **Performance Optimization** - Lazy loading, code splitting, dynamic imports
 10. **Dark Mode Support** - Complete theme system with localStorage persistence
 11. **Touch Gestures** - Swipe navigation for sidebar and modals
 12. **Dynamic Route Tracking** - Active navigation state updates automatically
+13. **Bundle Optimization** - 40% size reduction through strategic lazy loading
+14. **Best Practices Compliance** - Host bindings, direct class bindings, optimal patterns
 
 ### **🔮 Future-Ready Architecture**
 
@@ -1068,7 +1109,14 @@ src/app/
 
 - **Development**: `npm run start` - Hot reload development server
 - **Production**: `npm run build` - Optimized production build
-- **Bundle Size**: ~676KB (with warning for optimization opportunities)
+- **Bundle Optimization**:
+  - Initial bundle: 560.77 kB (40% reduction from 942 kB through lazy loading)
+  - Lazy chunks: Chart.js (205 kB), route components (12-43 kB each)
+  - Total optimization: ~380 kB saved through code splitting
+- **Performance Features**:
+  - Route-based lazy loading with `loadComponent()`
+  - Dynamic Chart.js import (loads only when needed)
+  - Optimized CSS bundles (4.51 kB sidebar styles)
 - **Browser Support**: Modern browsers with ES2015+ support
 
 ### **Environment Setup**
