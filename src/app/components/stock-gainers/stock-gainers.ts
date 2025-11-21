@@ -164,18 +164,6 @@ export class StockGainersComponent implements OnInit {
     });
   }
 
-  getChangeClass(changePercent: number): string {
-    if (changePercent > 10) return 'text-green-700 font-bold';
-    if (changePercent > 5) return 'text-green-600 font-semibold';
-    return 'text-green-500';
-  }
-
-  getChangeBgClass(changePercent: number): string {
-    if (changePercent > 10) return 'bg-green-50';
-    if (changePercent > 5) return 'bg-green-25';
-    return 'bg-gray-50';
-  }
-
   trackByStock(index: number, stock: StockData): string {
     return stock.symbol;
   }
