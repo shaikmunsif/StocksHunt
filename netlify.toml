@@ -1,0 +1,19 @@
+[build]
+  # Build command - runs the production build
+  command = "npm run build"
+  
+  # Output directory - Angular outputs to dist/stocks-pulse by default
+  publish = "dist/stocks-pulse/browser"
+  
+  # Set Node.js version (recommended for consistency)
+  environment = { NODE_VERSION = "20" }
+
+[build.environment]
+  # Netlify will inject your environment variables here
+  # Make sure to set SUPABASE_URL and SUPABASE_KEY in Netlify dashboard
+
+[[redirects]]
+  # Redirect all routes to index.html for Angular routing
+  from = "/*"
+  to = "/index.html"
+  status = 200
