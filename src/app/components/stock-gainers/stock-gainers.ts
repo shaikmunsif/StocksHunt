@@ -36,7 +36,6 @@ export class StockGainersComponent implements OnInit {
   availableDates: string[] = [];
   selectedDate: string = '';
   showHistoricalData: boolean = false;
-  isLoadingHistorical: boolean = false;
 
   // Exchange selection
   selectedExchange: string = 'NSE'; // Default to NSE
@@ -113,15 +112,12 @@ export class StockGainersComponent implements OnInit {
   async loadMarketDataForDate(): Promise<void> {
     if (!this.selectedDate) return;
 
-    this.isLoadingHistorical = true;
     try {
       this.marketData = await this.stockService.getMarketData(this.selectedDate);
       this.showHistoricalData = true;
     } catch (error) {
       console.error('Error loading market data:', error);
       this.marketData = { date: this.selectedDate, companies: [] };
-    } finally {
-      this.isLoadingHistorical = false;
     }
   }
 
