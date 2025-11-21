@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -13,6 +13,11 @@ import { filter, Subscription } from 'rxjs';
   imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss'],
+  host: {
+    '(window:resize)': 'onResize()',
+    '(touchstart)': 'onTouchStart($event)',
+    '(touchend)': 'onTouchEnd($event)',
+  },
   animations: [
     trigger('fadeIn', [
       transition(':enter', [
@@ -104,7 +109,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('window:resize')
   onResize(): void {
     // Close mobile menu on resize to desktop
     if (window.innerWidth >= 1024 && this.isMobileMenuOpen) {
@@ -138,7 +142,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   // Touch event handlers for mobile swipe
-  @HostListener('touchstart', ['$event'])
   onTouchStart(event: TouchEvent): void {
     if (window.innerWidth >= 1024) return; // Only on mobile
 
@@ -146,7 +149,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.touchStartY = event.touches[0].clientY;
   }
 
-  @HostListener('touchend', ['$event'])
   onTouchEnd(event: TouchEvent): void {
     if (window.innerWidth >= 1024) return; // Only on mobile
 
