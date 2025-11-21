@@ -10,8 +10,8 @@ export class AuthGuard implements CanActivate {
     try {
       // Check current authentication state
       if (this.authService.isAuthenticated()) {
-        // User is logged in, redirect to dashboard for both login and register routes
-        this.router.navigate(['/dashboard']);
+        // User is logged in, redirect to manage-data for both login and register routes
+        this.router.navigate(['/manage-data']);
         return false;
       }
 
@@ -21,8 +21,8 @@ export class AuthGuard implements CanActivate {
       } = await this.authService.supabase.auth.getSession();
 
       if (session?.user) {
-        // User has an active session, redirect to dashboard
-        this.router.navigate(['/dashboard']);
+        // User has an active session, redirect to manage-data
+        this.router.navigate(['/manage-data']);
         return false;
       }
 
