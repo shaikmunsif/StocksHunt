@@ -1,37 +1,53 @@
 <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50" role="dialog" aria-label="Loading progress" aria-modal="true">
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border-2 border-blue-500 dark:border-blue-400 p-6">
+  <div class="backdrop-blur-sm bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8">
     <div class="flex flex-col items-center gap-4">
-      <div class="relative w-24 h-24">
-        <svg class="transform -rotate-90 w-24 h-24" role="img" [attr.aria-label]="'Progress: ' + progress + '%'">
+      <div class="relative w-32 h-32">
+        <!-- Background circle -->
+        <svg 
+          class="transform -rotate-90 w-32 h-32" 
+          viewBox="0 0 120 120"
+          role="img" 
+          [attr.aria-label]="'Progress: ' + progress + '%'"
+        >
           <circle
-            [attr.cx]="centerPosition"
-            [attr.cy]="centerPosition"
-            [attr.r]="radius"
+            cx="60"
+            cy="60"
+            r="54"
             stroke="currentColor"
             stroke-width="8"
-            fill="transparent"
+            fill="none"
             class="text-gray-200 dark:text-gray-700"
           />
           <circle
-            [attr.cx]="centerPosition"
-            [attr.cy]="centerPosition"
-            [attr.r]="radius"
-            stroke="currentColor"
+            cx="60"
+            cy="60"
+            r="54"
+            stroke="url(#progressGradient)"
             stroke-width="8"
-            fill="transparent"
-            class="text-blue-600 dark:text-blue-400 transition-all duration-300"
+            fill="none"
             [attr.stroke-dasharray]="circumference"
             [attr.stroke-dashoffset]="strokeDashoffset"
             stroke-linecap="round"
+            class="transition-all duration-500 ease-out"
           />
+          <defs>
+            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+            </linearGradient>
+          </defs>
         </svg>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ progress }}%</span>
+        <!-- Progress text -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-3xl font-bold text-gray-900 dark:text-white leading-none">{{ progress }}</span>
+          <span class="text-sm font-medium text-gray-500 dark:text-gray-400">%</span>
         </div>
       </div>
-      <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
-        {{ message || 'Loading...' }}
-      </p>
+      <div class="text-center">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ message || 'Loading...' }}
+        </p>
+      </div>
     </div>
   </div>
 </div>

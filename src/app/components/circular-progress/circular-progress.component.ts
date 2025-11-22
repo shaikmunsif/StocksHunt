@@ -9,10 +9,8 @@ export class CircularProgressComponent {
   @Input() progress: number = 0;
   @Input() message: string = '';
   
-  readonly radius = 40;
-  readonly svgSize = 96; // 24 * 4 (w-24 h-24 in Tailwind)
+  readonly radius = 54;
   readonly circumference = 2 * Math.PI * this.radius;
-  readonly centerPosition = this.svgSize / 2;
   
   get strokeDashoffset(): number {
     return this.circumference - (this.circumference * this.progress / 100);
