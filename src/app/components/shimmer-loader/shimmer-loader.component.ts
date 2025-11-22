@@ -1,10 +1,9 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-shimmer-loader',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './shimmer-loader.component.html',
   styleUrl: './shimmer-loader.component.scss',
 })

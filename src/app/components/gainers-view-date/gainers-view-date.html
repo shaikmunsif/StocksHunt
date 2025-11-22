@@ -116,19 +116,20 @@
     }
 
     <!-- Error State -->
-    <div
-      *ngIf="error && !isLoading"
-      class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
-    >
-      <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
-      <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
-    </div>
+    @if (error && !isLoading) {
+      <div
+        class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
+      >
+        <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
+        <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
+      </div>
+    }
 
     <!-- Data Table -->
-    <div
-      *ngIf="!isLoading && !error"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
-    >
+    @if (!isLoading && !error) {
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
+      >
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Market Data</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -535,7 +536,8 @@
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+    }
   </div>
 </div>
 

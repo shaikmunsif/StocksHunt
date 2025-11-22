@@ -1,8 +1,8 @@
-<div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50" role="dialog" aria-label="Loading progress">
+<div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50" role="dialog" aria-label="Loading progress" aria-modal="true">
   <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border-2 border-blue-500 dark:border-blue-400 p-6">
     <div class="flex flex-col items-center gap-4">
       <div class="relative w-24 h-24">
-        <svg class="transform -rotate-90 w-24 h-24">
+        <svg class="transform -rotate-90 w-24 h-24" role="img" [attr.aria-label]="'Progress: ' + progress + '%'">
           <circle
             [attr.cx]="centerPosition"
             [attr.cy]="centerPosition"

@@ -7,7 +7,7 @@
   }
 }
 
-:host ::ng-deep .animate-pulse > * > * {
+:host .animate-pulse > * > * {
   animation: shimmer 2s infinite linear;
   background: linear-gradient(
     to right,
@@ -18,7 +18,7 @@
   background-size: 800px 104px;
 }
 
-:host-context(.dark) ::ng-deep .animate-pulse > * > * {
+:host-context(.dark) .animate-pulse > * > * {
   background: linear-gradient(
     to right,
     #374151 8%,

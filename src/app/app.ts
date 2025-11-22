@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from './services/auth.service';
 import { ThemeService } from './services/theme.service';
 import { LayoutService } from './services/layout.service';
@@ -26,17 +27,19 @@ export class App {
 
   constructor() {
     // Listen to router events to show shimmer during lazy loading
-    this.router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        this.isLoadingRoute = true;
-      } else if (
-        event instanceof NavigationEnd ||
-        event instanceof NavigationCancel ||
-        event instanceof NavigationError
-      ) {
-        this.isLoadingRoute = false;
-      }
-    });
+    this.router.events
+      .pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        if (event instanceof NavigationStart) {
+          this.isLoadingRoute = true;
+        } else if (
+          event instanceof NavigationEnd ||
+          event instanceof NavigationCancel ||
+          event instanceof NavigationError
+        ) {
+          this.isLoadingRoute = false;
+        }
+      });
   }
 
   logout() {
