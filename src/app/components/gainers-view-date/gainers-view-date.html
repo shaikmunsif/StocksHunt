@@ -97,8 +97,22 @@
           <div
             class="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
           >
+            @if (isLoading) {
+            <div class="flex items-center gap-3 w-full">
+              <div class="flex-1 flex items-center justify-between">
+                <span class="text-xs uppercase tracking-wide">Loading...</span>
+                @if (loadingProgress > 0) {
+                <span class="text-sm font-semibold">{{ loadingProgress }}%</span>
+                }
+              </div>
+              <div
+                class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"
+              ></div>
+            </div>
+            } @else {
             <span class="text-xs uppercase tracking-wide">Companies</span>
             <span class="text-lg font-semibold">{{ marketData?.companies?.length || 0 }}</span>
+            }
           </div>
         </div>
       </div>
@@ -106,30 +120,24 @@
 
     <!-- Loading State with Shimmer -->
     @if (isLoading) {
-      <div class="relative">
-        <app-shimmer-loader type="table" [rows]="10" [showHeader]="true"></app-shimmer-loader>
-        <!-- Progress overlay -->
-        @if (loadingProgress > 0) {
-          <app-circular-progress [progress]="loadingProgress" message="Loading market data..."></app-circular-progress>
-        }
-      </div>
+    <app-shimmer-loader type="table" [rows]="10" [showHeader]="true"></app-shimmer-loader>
     }
 
     <!-- Error State -->
     @if (error && !isLoading) {
-      <div
-        class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
-      >
-        <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
-        <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
-      </div>
+    <div
+      class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
+    >
+      <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
+      <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
+    </div>
     }
 
     <!-- Data Table -->
     @if (!isLoading && !error) {
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
-      >
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
+    >
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Market Data</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -536,7 +544,7 @@
           </tbody>
         </table>
       </div>
-      </div>
+    </div>
     }
   </div>
 </div>

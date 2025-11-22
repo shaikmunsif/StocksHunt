@@ -1,9 +1,0 @@
-:host {
-  display: contents;
-}
-
-/* Smooth transition for progress ring */
-[style*="conic-gradient"] {
-  transition: background 0.3s ease-out;
-  transform: rotate(-90deg);
-}

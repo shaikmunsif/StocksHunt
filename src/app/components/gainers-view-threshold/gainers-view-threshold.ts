@@ -14,12 +14,11 @@ import { DialogService } from '../dialog/dialog.service';
 import { CommentModalComponent } from '../comment-modal/comment-modal.component';
 import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-modal.component';
 import { ShimmerLoaderComponent } from '../shimmer-loader/shimmer-loader.component';
-import { CircularProgressComponent } from '../circular-progress/circular-progress.component';
 
 @Component({
   selector: 'app-gainers-view-threshold',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ShimmerLoaderComponent, CircularProgressComponent],
+  imports: [CommonModule, RouterModule, FormsModule, ShimmerLoaderComponent],
   templateUrl: './gainers-view-threshold.html',
   styleUrls: ['./gainers-view-threshold.scss'],
 })

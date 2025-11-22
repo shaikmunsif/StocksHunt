@@ -38,8 +38,8 @@ import { CommonModule } from '@angular/common';
 
         <div
           class="relative inline-block w-full align-bottom bg-white dark:bg-gray-800 text-left overflow-hidden shadow-xl transform transition-all
-                 max-h-[90vh] rounded-t-2xl sm:rounded-lg
-                 sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full
+                   max-h-[92vh] rounded-t-2xl sm:rounded-lg
+                   sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full lg:max-w-7xl
                  mobile-dialog-content"
         >
           <!-- Mobile Drag Handle -->
@@ -75,7 +75,7 @@ import { CommonModule } from '@angular/common';
 
           <!-- Dynamic Content -->
           <div
-            class="px-4 pt-2 pb-4 sm:px-6 sm:pt-5 sm:pb-4 overflow-y-auto max-h-[calc(90vh-60px)]"
+            class="px-4 pt-2 pb-4 sm:px-6 sm:pt-5 sm:pb-4 md:px-8 overflow-y-auto max-h-[calc(92vh-60px)]"
           >
             <ng-template #contentHost></ng-template>
           </div>
