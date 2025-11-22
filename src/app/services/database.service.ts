@@ -260,9 +260,22 @@ export class DatabaseService {
   async saveMarketData(
     parsedData: ParsedStockData[],
     recordDate: string,
-    exchangeCode: string = 'NSE'
+    exchangeCode: string = 'NSE',
+    progressCallback?: (progress: number, message: string) => void
   ): Promise<boolean> {
     try {
+      const SETUP_STEPS = 2; // Exchange and category setup
+      const totalSteps = parsedData.length + SETUP_STEPS;
+      let currentStep = 0;
+
+      const updateProgress = (message: string) => {
+        currentStep++;
+        const progress = Math.min(Math.round((currentStep / totalSteps) * 100), 100);
+        if (progressCallback) {
+          progressCallback(progress, message);
+        }
+      };
+
       const {
         data: { session },
         error: sessionError,
@@ -270,6 +283,7 @@ export class DatabaseService {
       if (sessionError || !session?.user?.id) throw new Error('User not authenticated');
 
       // Get or create exchange based on the selected exchange
+      updateProgress('Setting up exchange...');
       let exchange = await this.getExchangeByCode(exchangeCode);
       if (!exchange) {
         exchange = await this.createExchange({ code: exchangeCode });
@@ -277,11 +291,15 @@ export class DatabaseService {
       }
 
       // Get or create default category
+      updateProgress('Setting up category...');
       const defaultCategory = await this.getOrCreateDefaultCategory('Good');
       if (!defaultCategory) throw new Error('Failed to get or create default category');
 
       // Process each stock
-      for (const stock of parsedData) {
+      for (let i = 0; i < parsedData.length; i++) {
+        const stock = parsedData[i];
+        updateProgress(`Processing ${stock.tickerSymbol} (${i + 1}/${parsedData.length})...`);
+
         // Create or update company
         const company = await this.createOrUpdateCompany({
           ticker_symbol: stock.tickerSymbol,

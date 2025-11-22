@@ -21,6 +21,8 @@ export class StockGainersComponent implements OnInit {
   private stockService = inject(StockService);
   private databaseService = inject(DatabaseService);
 
+  private readonly PROGRESS_DISPLAY_DELAY_MS = 500;
+
   // Legacy properties for backward compatibility
   stockData: StockGainersResponse = { date: '', stocks: [] };
   dateInput: string = ''; // Will be set to today's date in ngOnInit
@@ -28,6 +30,8 @@ export class StockGainersComponent implements OnInit {
   showData: boolean = false;
   isSaving: boolean = false;
   saveMessage: string = '';
+  saveProgress: number = 0;
+  saveProgressMessage: string = '';
 
   // New properties for database structure
   marketData: MarketDataResponse = { date: '', companies: [] };
@@ -60,18 +64,28 @@ export class StockGainersComponent implements OnInit {
 
     this.isSaving = true;
     this.saveMessage = '';
+    this.saveProgress = 0;
+    this.saveProgressMessage = '';
 
     try {
       const success = await this.stockService.saveToDatabase(
         this.tableInput,
         this.dateInput,
-        this.selectedExchange
+        this.selectedExchange,
+        (progress: number, message: string) => {
+          this.saveProgress = progress;
+          this.saveProgressMessage = message;
+        }
       );
 
       if (success) {
         this.saveMessage = 'Data saved successfully to database!';
+        this.saveProgress = 100;
+        this.saveProgressMessage = 'Complete!';
         setTimeout(() => {
           this.saveMessage = '';
+          this.saveProgress = 0;
+          this.saveProgressMessage = '';
         }, 3000);
         await this.loadAvailableDates(); // Refresh available dates
       } else {
@@ -80,7 +94,9 @@ export class StockGainersComponent implements OnInit {
     } catch (error) {
       this.saveMessage = 'Error saving data. Please try again.';
     } finally {
-      this.isSaving = false;
+      setTimeout(() => {
+        this.isSaving = false;
+      }, this.PROGRESS_DISPLAY_DELAY_MS); // Keep showing final progress briefly
     }
   }
 

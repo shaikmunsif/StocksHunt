@@ -97,49 +97,45 @@
           <div
             class="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
           >
+            @if (isLoading) {
+            <div class="flex items-center gap-3 w-full">
+              <div class="flex-1 flex items-center justify-between">
+                <span class="text-xs uppercase tracking-wide">Loading...</span>
+                @if (loadingProgress > 0) {
+                <span class="text-sm font-semibold">{{ loadingProgress }}%</span>
+                }
+              </div>
+              <div
+                class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"
+              ></div>
+            </div>
+            } @else {
             <span class="text-xs uppercase tracking-wide">Companies</span>
             <span class="text-lg font-semibold">{{ marketData?.companies?.length || 0 }}</span>
+            }
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div
-      *ngIf="isLoading"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 transition-colors duration-300"
-    >
-      <div class="flex flex-col items-center gap-4">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"
-        ></div>
-        <p class="text-gray-600 dark:text-gray-400">
-          Loading market data for {{ selectedDate | date : 'mediumDate' }}...
-        </p>
-        @if (loadingProgress > 0) {
-        <div class="w-64 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-          <div
-            class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-            [style.width.%]="loadingProgress"
-          ></div>
-        </div>
-        <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ loadingProgress }}%</p>
-        }
-      </div>
-    </div>
+    <!-- Loading State with Shimmer -->
+    @if (isLoading) {
+    <app-shimmer-loader type="table" [rows]="10" [showHeader]="true"></app-shimmer-loader>
+    }
 
     <!-- Error State -->
+    @if (error && !isLoading) {
     <div
-      *ngIf="error && !isLoading"
       class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
     >
       <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
       <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
     </div>
+    }
 
     <!-- Data Table -->
+    @if (!isLoading && !error) {
     <div
-      *ngIf="!isLoading && !error"
       class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
     >
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -549,6 +545,7 @@
         </table>
       </div>
     </div>
+    }
   </div>
 </div>
 

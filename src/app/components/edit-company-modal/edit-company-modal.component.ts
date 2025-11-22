@@ -25,35 +25,32 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
       (touchstart)="onTouchStart($event)"
       (touchend)="onTouchEnd($event)"
     >
-      <div class="sm:flex sm:items-start mb-4">
-        <div
-          class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-10 sm:w-10"
-        >
-          <svg
-            class="h-6 w-6 text-blue-600 dark:text-blue-300"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <div class="mb-6">
+        <div class="flex items-center gap-4">
+          <div
+            class="flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
-          </svg>
-        </div>
-        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-          <div class="flex items-center justify-between">
-            <h3
-              class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
-              id="modal-title"
+            <svg
+              class="h-6 w-6 text-blue-600 dark:text-blue-300"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </div>
+          <div class="flex items-baseline gap-3 flex-wrap">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white" id="modal-title">
               Edit Company Details
             </h3>
             @if (companiesList.length > 0) {
-            <span class="text-sm text-gray-500 dark:text-gray-400 ml-4">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
               {{ currentIndex + 1 }} / {{ companiesList.length }}
             </span>
             }

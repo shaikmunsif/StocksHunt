@@ -132,7 +132,8 @@ export class StockService {
   async saveToDatabase(
     tableInput: string,
     date: string,
-    exchangeCode: string = 'NSE'
+    exchangeCode: string = 'NSE',
+    progressCallback?: (progress: number, message: string) => void
   ): Promise<boolean> {
     try {
       const parsedData = this.parseTableDataForDatabase(tableInput);
@@ -140,7 +141,7 @@ export class StockService {
         return false;
       }
 
-      return await this.databaseService.saveMarketData(parsedData, date, exchangeCode);
+      return await this.databaseService.saveMarketData(parsedData, date, exchangeCode, progressCallback);
     } catch (error) {
       console.error('Error saving to database:', error);
       return false;
