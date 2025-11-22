@@ -1,8 +1,8 @@
 <!-- Table Shimmer -->
-@if (type === 'table') {
+@if (type() === 'table') {
   <div class="animate-pulse">
     <!-- Header Shimmer -->
-    @if (showHeader) {
+    @if (showHeader()) {
       <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6"
       >
@@ -47,7 +47,7 @@
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-900">
             <tr>
-              @for (col of columnArray; track $index) {
+              @for (col of columnArray(); track $index) {
                 <th class="px-6 py-3">
                   <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
                 </th>
@@ -55,9 +55,9 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            @for (row of rowArray; track $index) {
+            @for (row of rowArray(); track $index) {
               <tr>
-                @for (col of columnArray; track $index) {
+                @for (col of columnArray(); track $index) {
                   <td class="px-6 py-4">
                     <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
                   </td>
@@ -72,7 +72,7 @@
 }
 
 <!-- Card Shimmer -->
-@if (type === 'card') {
+@if (type() === 'card') {
   <div class="animate-pulse">
     <div
       class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
@@ -90,7 +90,7 @@
 }
 
 <!-- Text Shimmer -->
-@if (type === 'text') {
+@if (type() === 'text') {
   <div class="animate-pulse space-y-3">
     <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
     <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
@@ -99,7 +99,7 @@
 }
 
 <!-- Full Page Shimmer -->
-@if (type === 'full-page') {
+@if (type() === 'full-page') {
   <div class="animate-pulse min-h-screen p-8">
     <div class="max-w-7xl mx-auto space-y-6">
       <!-- Header -->
@@ -117,7 +117,7 @@
         class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
       >
         <div class="space-y-4">
-          @for (item of rowArray; track $index) {
+          @for (item of rowArray(); track $index) {
             <div class="space-y-2">
               <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
               <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5"></div>
