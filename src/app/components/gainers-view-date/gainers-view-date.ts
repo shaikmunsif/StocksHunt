@@ -329,7 +329,7 @@ export class GainersViewDateComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => {}, // No-op: store is updated optimistically
+      onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
     });
   }
 
@@ -339,7 +339,7 @@ export class GainersViewDateComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => {}, // No-op: store is updated optimistically
+      onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
     });
   }
 
@@ -354,10 +354,47 @@ export class GainersViewDateComponent implements OnInit {
       occurrenceCount: this.getOccurrenceCount(company),
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => {}, // No-op: store is updated optimistically
+      onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
       companiesList: this.marketData?.companies || [],
       currentIndex: index,
       occurrenceCounts: this.occurrenceCounts,
     });
+  }
+
+  private async updateLocalCompanyData(companyId: string): Promise<void> {
+    // Fetch updated company data from database
+    try {
+      const { data, error } = await this.databaseService['authService'].supabase
+        .from('companies')
+        .select(`
+          *,
+          exchange:exchanges(code, name),
+          category:categories(name)
+        `)
+        .eq('id', companyId)
+        .single();
+
+      if (error) throw error;
+
+      // Update the company in local marketData
+      if (this.marketData && data) {
+        const companyIndex = this.marketData.companies.findIndex(c => c.id === companyId);
+        if (companyIndex !== -1) {
+          // Preserve the market_data from the existing company
+          const existingMarketData = this.marketData.companies[companyIndex].market_data;
+          this.marketData.companies[companyIndex] = {
+            ...data,
+            market_data: existingMarketData
+          };
+          // Trigger change detection by creating a new array reference
+          this.marketData = {
+            ...this.marketData,
+            companies: [...this.marketData.companies]
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error updating local company data:', error);
+    }
   }
 }

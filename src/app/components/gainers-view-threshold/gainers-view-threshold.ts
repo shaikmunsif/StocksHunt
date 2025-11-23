@@ -348,7 +348,7 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => {}, // No-op: store is updated optimistically
+      onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
     });
   }
 
@@ -358,7 +358,7 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => {}, // No-op: store is updated optimistically
+      onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
     });
   }
 
@@ -379,10 +379,49 @@ export class GainersViewThresholdComponent implements OnInit {
       occurrenceCount: company.occurrenceCount || 0,
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => {}, // No-op: store is updated optimistically
+      onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
       companiesList: this.repeatedCompanies as any[], // Cast since it's compatible interface
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,
     });
+  }
+
+  private async updateLocalCompanyData(companyId: string): Promise<void> {
+    // Fetch updated company data from database
+    try {
+      const { data, error } = await this.databaseService['authService'].supabase
+        .from('companies')
+        .select(`
+          *,
+          exchange:exchanges(code, name),
+          category:categories(name)
+        `)
+        .eq('id', companyId)
+        .single();
+
+      if (error) throw error;
+
+      // Update the company in local repeatedCompanies array
+      if (data) {
+        const companyIndex = this.repeatedCompanies.findIndex(c => c.id === companyId);
+        if (companyIndex !== -1) {
+          // Preserve occurrence-specific data while updating company details
+          const existing = this.repeatedCompanies[companyIndex];
+          this.repeatedCompanies[companyIndex] = {
+            ...existing,
+            ...data,
+            // Preserve occurrence-specific fields
+            occurrenceCount: existing.occurrenceCount,
+            averageChange: existing.averageChange,
+            latestPrice: existing.latestPrice,
+            occurrences: existing.occurrences
+          };
+          // Trigger change detection by creating a new array reference
+          this.repeatedCompanies = [...this.repeatedCompanies];
+        }
+      }
+    } catch (error) {
+      console.error('Error updating local company data:', error);
+    }
   }
 }
