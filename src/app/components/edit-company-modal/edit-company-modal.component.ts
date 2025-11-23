@@ -3,6 +3,7 @@ import {
   inject,
   signal,
   OnInit,
+  OnDestroy,
   ViewChild,
   ElementRef,
   AfterViewInit,
@@ -415,7 +416,7 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
     </div>
   `,
 })
-export class EditCompanyModalComponent implements OnInit, AfterViewInit {
+export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('priceChart') priceChartRef!: ElementRef<HTMLCanvasElement>;
 
   // Inputs
@@ -446,6 +447,9 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   newInlineCategoryName = signal('');
   saveMessage = signal<string | null>(null);
   saveSuccess = signal(false);
+  
+  // Track the currently viewed company ID for proper close handling
+  currentCompanyId!: string;
 
   private chart?: Chart;
   private touchStartX = 0;
@@ -459,12 +463,21 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   async ngOnInit() {
     this.categoryValue = this.category || '';
     this.commentText = this.comment || '';
+    this.currentCompanyId = this.companyId; // Initialize with the starting company
     await this.loadCategories();
     this.loadHistoricalData();
   }
 
   ngAfterViewInit() {
     // Chart will be created after data loads
+  }
+
+  ngOnDestroy() {
+    // Call onClose with the current company ID when component is destroyed
+    // This handles the X button click and other destroy scenarios
+    if (this.onClose) {
+      this.onClose();
+    }
   }
 
   async loadHistoricalData() {
@@ -744,7 +757,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   }
 
   cancel() {
-    if (this.onClose) this.onClose();
+    // Don't call onClose here - ngOnDestroy will handle it
     this.dialogService.close();
   }
 
@@ -764,6 +777,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
 
   private loadCompanyData(company: CompanyWithMarketData): void {
     this.companyId = company.id;
+    this.currentCompanyId = company.id; // Update the current company ID for proper close handling
     this.companyName = company.name;
     this.tickerSymbol = company.ticker_symbol;
     this.currentPrice = this.formatPrice(company.market_data?.current_price);

@@ -347,7 +347,7 @@ export class GainersViewDateComponent implements OnInit {
   }
 
   editRow(company: CompanyWithMarketData, index: number): void {
-    this.dialogService.open(EditCompanyModalComponent, {
+    const modalInstance = this.dialogService.open(EditCompanyModalComponent, {
       companyId: company.id,
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
@@ -358,11 +358,19 @@ export class GainersViewDateComponent implements OnInit {
       category: company.category?.name || '',
       comment: company.comments || '',
       onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
-      onClose: () => this.highlightAndScrollToCompany(company.id), // Highlight on close
       companiesList: this.marketData?.companies || [],
       currentIndex: index,
       occurrenceCounts: this.occurrenceCounts,
     });
+
+    // Set onClose to use the current company ID from the modal instance
+    if (modalInstance?.instance) {
+      modalInstance.instance.onClose = () => {
+        // Use the currentCompanyId from the modal to get the last viewed company
+        const currentId = modalInstance.instance.currentCompanyId;
+        this.highlightAndScrollToCompany(currentId);
+      };
+    }
   }
 
   private highlightAndScrollToCompany(companyId: string): void {
