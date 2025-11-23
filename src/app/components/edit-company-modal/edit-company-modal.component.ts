@@ -474,7 +474,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
 
   ngOnDestroy() {
     // Call onClose with the current company ID when component is destroyed
-    // This handles the X button click and other destroy scenarios
+    // This handles all modal close scenarios: X button, cancel, backdrop click
     if (this.onClose) {
       this.onClose();
     }
