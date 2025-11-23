@@ -304,6 +304,27 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 sm:py-2"
           ></textarea>
         </div>
+
+        <!-- Success/Error Message -->
+        @if (saveMessage()) {
+        <div
+          [class]="saveSuccess() ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'"
+          class="p-4 rounded-lg border"
+        >
+          <div class="flex items-center">
+            @if (saveSuccess()) {
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            } @else {
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            }
+            <p class="text-sm font-medium">{{ saveMessage() }}</p>
+          </div>
+        </div>
+        }
       </div>
     </div>
 
@@ -408,6 +429,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   category: string = '';
   comment: string = '';
   onSave!: () => void;
+  onClose?: () => void;
 
   // Navigation properties
   companiesList: CompanyWithMarketData[] = [];
@@ -422,6 +444,8 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   historicalData = signal<MarketData[]>([]);
   isAddingInlineCategory = signal(false);
   newInlineCategoryName = signal('');
+  saveMessage = signal<string | null>(null);
+  saveSuccess = signal(false);
 
   private chart?: Chart;
   private touchStartX = 0;
@@ -680,6 +704,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     }
 
     this.isSaving.set(true);
+    this.saveMessage.set(null);
 
     try {
       // Update category
@@ -700,16 +725,26 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
       });
 
       if (this.onSave) this.onSave();
-      this.dialogService.close();
+      
+      // Show success message instead of closing
+      this.saveSuccess.set(true);
+      this.saveMessage.set('Changes saved successfully!');
+      
+      // Auto-clear message after 3 seconds
+      setTimeout(() => {
+        this.saveMessage.set(null);
+      }, 3000);
     } catch (error) {
       console.error('Error saving company details:', error);
-      alert('Failed to save changes. Please try again.');
+      this.saveSuccess.set(false);
+      this.saveMessage.set('Failed to save changes. Please try again.');
     } finally {
       this.isSaving.set(false);
     }
   }
 
   cancel() {
+    if (this.onClose) this.onClose();
     this.dialogService.close();
   }
 

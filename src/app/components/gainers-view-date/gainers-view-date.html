@@ -153,6 +153,8 @@
           <div
             *ngFor="let company of marketData?.companies || []; let i = index; trackBy: trackByFn"
             class="mobile-card"
+            [attr.data-company-id]="company.id"
+            [class.highlight-row]="highlightedCompanyId === company.id"
           >
             <div class="mobile-card-header">
               <div class="mobile-card-title">
@@ -409,6 +411,8 @@
                   trackBy: trackByFn
                 "
                 class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
+                [attr.data-company-id]="company.id"
+                [class.highlight-row]="highlightedCompanyId === company.id"
               >
                 <td class="table-cell-text">
                   <a

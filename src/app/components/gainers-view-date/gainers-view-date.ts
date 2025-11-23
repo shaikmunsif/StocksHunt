@@ -37,6 +37,9 @@ export class GainersViewDateComponent implements OnInit {
   sortColumn: string = 'ticker_symbol';
   sortDirection: 'asc' | 'desc' = 'asc';
 
+  // Highlight tracking
+  highlightedCompanyId: string | null = null;
+
   constructor(
     private databaseService: DatabaseService,
     private authService: AuthService,
@@ -355,10 +358,31 @@ export class GainersViewDateComponent implements OnInit {
       category: company.category?.name || '',
       comment: company.comments || '',
       onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
+      onClose: () => this.highlightAndScrollToCompany(company.id), // Highlight on close
       companiesList: this.marketData?.companies || [],
       currentIndex: index,
       occurrenceCounts: this.occurrenceCounts,
     });
+  }
+
+  private highlightAndScrollToCompany(companyId: string): void {
+    // Set the highlighted company
+    this.highlightedCompanyId = companyId;
+
+    // Wait for next tick to ensure DOM is updated
+    setTimeout(() => {
+      // Find the row element by company ID
+      const rowElement = document.querySelector(`[data-company-id="${companyId}"]`);
+      if (rowElement) {
+        // Scroll to the element with smooth behavior
+        rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        this.highlightedCompanyId = null;
+      }, 3000);
+    }, 100);
   }
 
   private async updateLocalCompanyData(companyId: string): Promise<void> {

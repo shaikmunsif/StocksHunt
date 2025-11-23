@@ -44,6 +44,9 @@ export class GainersViewThresholdComponent implements OnInit {
     | 'occurrence_count' = 'occurrence_count';
   sortDirection: 'asc' | 'desc' = 'desc';
 
+  // Highlight tracking
+  highlightedCompanyId: string | null = null;
+
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly dialogService: DialogService,
@@ -380,10 +383,31 @@ export class GainersViewThresholdComponent implements OnInit {
       category: company.category?.name || '',
       comment: company.comments || '',
       onSave: () => this.updateLocalCompanyData(company.id), // Update local component data
+      onClose: () => this.highlightAndScrollToCompany(company.id), // Highlight on close
       companiesList: this.repeatedCompanies as any[], // Cast since it's compatible interface
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,
     });
+  }
+
+  private highlightAndScrollToCompany(companyId: string): void {
+    // Set the highlighted company
+    this.highlightedCompanyId = companyId;
+
+    // Wait for next tick to ensure DOM is updated
+    setTimeout(() => {
+      // Find the row element by company ID
+      const rowElement = document.querySelector(`[data-company-id="${companyId}"]`);
+      if (rowElement) {
+        // Scroll to the element with smooth behavior
+        rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        this.highlightedCompanyId = null;
+      }, 3000);
+    }, 100);
   }
 
   private async updateLocalCompanyData(companyId: string): Promise<void> {

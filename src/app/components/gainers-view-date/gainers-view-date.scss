@@ -3,6 +3,42 @@
     transition: color 0.2s ease-in-out;
 }
 
+/* Highlight Row Animation */
+.highlight-row {
+    animation: highlightFade 3s ease-in-out;
+    background-color: rgba(59, 130, 246, 0.2) !important;
+
+    :host-context(.dark) & {
+        background-color: rgba(59, 130, 246, 0.15) !important;
+    }
+}
+
+@keyframes highlightFade {
+    0% {
+        background-color: rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        background-color: rgba(59, 130, 246, 0.2);
+    }
+    100% {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+}
+
+:host-context(.dark) {
+    @keyframes highlightFade {
+        0% {
+            background-color: rgba(59, 130, 246, 0.3);
+        }
+        50% {
+            background-color: rgba(59, 130, 246, 0.15);
+        }
+        100% {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+    }
+}
+
 /* Comment Button Animations */
 button[title="Add comment"],
 button[title="Edit comment"] {
