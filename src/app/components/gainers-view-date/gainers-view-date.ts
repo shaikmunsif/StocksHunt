@@ -363,14 +363,16 @@ export class GainersViewDateComponent implements OnInit {
       occurrenceCounts: this.occurrenceCounts,
     });
 
-    // Set onClose to use the current company ID from the modal instance
-    if (modalInstance?.instance) {
-      modalInstance.instance.onClose = () => {
-        // Use the currentCompanyId from the modal to get the last viewed company
-        const currentId = modalInstance.instance.currentCompanyId;
-        this.highlightAndScrollToCompany(currentId);
-      };
-    }
+    // Set onClose after a short delay to ensure the component instance is created
+    setTimeout(() => {
+      if (modalInstance?.instance) {
+        modalInstance.instance.onClose = () => {
+          // Use the currentCompanyId from the modal to get the last viewed company
+          const currentId = modalInstance.instance.currentCompanyId;
+          this.highlightAndScrollToCompany(currentId);
+        };
+      }
+    }, 100);
   }
 
   private highlightAndScrollToCompany(companyId: string): void {
