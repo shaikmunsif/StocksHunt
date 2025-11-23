@@ -195,6 +195,34 @@ export class DatabaseService {
     }
   }
 
+  async getCompanyById(companyId: string): Promise<Company | null> {
+    try {
+      const { data, error } = await this.authService.supabase
+        .from('companies')
+        .select(
+          `
+          *,
+          exchange:exchanges(code, name),
+          category:categories(name)
+        `
+        )
+        .eq('id', companyId)
+        .maybeSingle();
+
+      if (error) {
+        // Don't throw error for PGRST116 (no results), return null
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error fetching company by ID:', error);
+      return null;
+    }
+  }
+
   async createOrUpdateCompany(companyData: Partial<Company>): Promise<Company | null> {
     try {
       const {

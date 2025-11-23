@@ -389,36 +389,29 @@ export class GainersViewThresholdComponent implements OnInit {
   private async updateLocalCompanyData(companyId: string): Promise<void> {
     // Fetch updated company data from database
     try {
-      const { data, error } = await this.databaseService['authService'].supabase
-        .from('companies')
-        .select(`
-          *,
-          exchange:exchanges(code, name),
-          category:categories(name)
-        `)
-        .eq('id', companyId)
-        .single();
+      const data = await this.databaseService.getCompanyById(companyId);
 
-      if (error) throw error;
+      if (!data) {
+        console.error('Company not found');
+        return;
+      }
 
       // Update the company in local repeatedCompanies array
-      if (data) {
-        const companyIndex = this.repeatedCompanies.findIndex(c => c.id === companyId);
-        if (companyIndex !== -1) {
-          // Preserve occurrence-specific data while updating company details
-          const existing = this.repeatedCompanies[companyIndex];
-          this.repeatedCompanies[companyIndex] = {
-            ...existing,
-            ...data,
-            // Preserve occurrence-specific fields
-            occurrenceCount: existing.occurrenceCount,
-            averageChange: existing.averageChange,
-            latestPrice: existing.latestPrice,
-            occurrences: existing.occurrences
-          };
-          // Trigger change detection by creating a new array reference
-          this.repeatedCompanies = [...this.repeatedCompanies];
-        }
+      const companyIndex = this.repeatedCompanies.findIndex(c => c.id === companyId);
+      if (companyIndex !== -1) {
+        // Preserve occurrence-specific data while updating company details
+        const existing = this.repeatedCompanies[companyIndex];
+        this.repeatedCompanies[companyIndex] = {
+          ...existing,
+          ...data,
+          // Preserve occurrence-specific fields
+          occurrenceCount: existing.occurrenceCount,
+          averageChange: existing.averageChange,
+          latestPrice: existing.latestPrice,
+          occurrences: existing.occurrences
+        };
+        // Trigger change detection by creating a new array reference
+        this.repeatedCompanies = [...this.repeatedCompanies];
       }
     } catch (error) {
       console.error('Error updating local company data:', error);

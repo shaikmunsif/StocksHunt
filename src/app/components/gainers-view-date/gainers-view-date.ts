@@ -364,20 +364,15 @@ export class GainersViewDateComponent implements OnInit {
   private async updateLocalCompanyData(companyId: string): Promise<void> {
     // Fetch updated company data from database
     try {
-      const { data, error } = await this.databaseService['authService'].supabase
-        .from('companies')
-        .select(`
-          *,
-          exchange:exchanges(code, name),
-          category:categories(name)
-        `)
-        .eq('id', companyId)
-        .single();
+      const data = await this.databaseService.getCompanyById(companyId);
 
-      if (error) throw error;
+      if (!data) {
+        console.error('Company not found');
+        return;
+      }
 
       // Update the company in local marketData
-      if (this.marketData && data) {
+      if (this.marketData) {
         const companyIndex = this.marketData.companies.findIndex(c => c.id === companyId);
         if (companyIndex !== -1) {
           // Preserve the market_data from the existing company
