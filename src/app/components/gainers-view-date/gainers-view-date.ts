@@ -329,7 +329,7 @@ export class GainersViewDateComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => this.loadMarketData(),
+      onSave: () => {}, // No-op: store is updated optimistically
     });
   }
 
@@ -339,7 +339,7 @@ export class GainersViewDateComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: () => {}, // No-op: store is updated optimistically
     });
   }
 
@@ -354,7 +354,7 @@ export class GainersViewDateComponent implements OnInit {
       occurrenceCount: this.getOccurrenceCount(company),
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: () => {}, // No-op: store is updated optimistically
       companiesList: this.marketData?.companies || [],
       currentIndex: index,
       occurrenceCounts: this.occurrenceCounts,

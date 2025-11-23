@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
+import { StockStore } from '../../store/stock.store';
 
 @Component({
   selector: 'app-comment-modal',
@@ -75,6 +76,7 @@ export class CommentModalComponent {
 
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
+  readonly stockStore = inject(StockStore);
 
   ngOnInit() {
     this.commentText = this.comment || '';
@@ -89,6 +91,12 @@ export class CommentModalComponent {
 
     try {
       await this.databaseService.updateCompanyComment(this.companyId, this.commentText);
+      
+      // Update local store instead of full refresh
+      this.stockStore.updateCompanyInMarketData(this.companyId, {
+        comments: this.commentText.trim(),
+      });
+
       if (this.onSave) this.onSave();
       this.dialogService.close();
     } catch (error) {

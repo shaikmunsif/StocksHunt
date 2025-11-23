@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
+import { CategoryStore } from '../../store/category.store';
+import { StockStore } from '../../store/stock.store';
 import { CompanyWithMarketData, MarketData } from '../../interfaces/stock-data.interface';
 import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
 
@@ -226,15 +228,63 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
           >
             Category
           </label>
-          <input
-            type="text"
-            id="category"
-            [(ngModel)]="categoryValue"
-            placeholder="Enter category (e.g., Good, Average, Poor)"
-            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 h-12 sm:h-auto sm:py-2"
-          />
+          <div class="flex gap-2">
+            <select
+              id="category"
+              [(ngModel)]="selectedCategoryId"
+              class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 h-12 sm:h-auto sm:py-2"
+            >
+              <option [value]="null">-- Select Category --</option>
+              @for (category of categoryStore.categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+              }
+            </select>
+            <button
+              type="button"
+              (click)="openAddCategoryInline()"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              title="Add new category"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+          </div>
+          @if (isAddingInlineCategory()) {
+          <div class="mt-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+            <div class="flex gap-2">
+              <input
+                type="text"
+                [(ngModel)]="newInlineCategoryName"
+                (keyup.enter)="addInlineCategory()"
+                (keyup.escape)="cancelInlineCategory()"
+                placeholder="New category name"
+                class="flex-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white px-3 py-2"
+              />
+              <button
+                type="button"
+                (click)="addInlineCategory()"
+                class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                (click)="cancelInlineCategory()"
+                class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          }
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Common categories: Good, Average, Poor, Excellent
+            Select a category or add a new one
           </p>
         </div>
 
@@ -365,10 +415,13 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   occurrenceCounts: Map<string, number> = new Map();
 
   categoryValue: string = '';
+  selectedCategoryId: number | null = null;
   commentText: string = '';
   isSaving = signal(false);
   isLoadingChart = signal(true);
   historicalData = signal<MarketData[]>([]);
+  isAddingInlineCategory = signal(false);
+  newInlineCategoryName = signal('');
 
   private chart?: Chart;
   private touchStartX = 0;
@@ -376,10 +429,13 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
   readonly breakpoint = inject(BreakpointService);
+  readonly categoryStore = inject(CategoryStore);
+  readonly stockStore = inject(StockStore);
 
-  ngOnInit() {
+  async ngOnInit() {
     this.categoryValue = this.category || '';
     this.commentText = this.comment || '';
+    await this.loadCategories();
     this.loadHistoricalData();
   }
 
@@ -565,6 +621,49 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     return (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
   }
 
+  async loadCategories() {
+    try {
+      const categories = await this.databaseService.getCategories();
+      this.categoryStore.setCategories(categories);
+      
+      // Set selected category ID based on current company's category
+      const currentCompany = this.companiesList[this.currentIndex];
+      if (currentCompany?.category_id) {
+        this.selectedCategoryId = currentCompany.category_id;
+      } else {
+        this.selectedCategoryId = null;
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  }
+
+  openAddCategoryInline() {
+    this.isAddingInlineCategory.set(true);
+    this.newInlineCategoryName.set('');
+  }
+
+  cancelInlineCategory() {
+    this.isAddingInlineCategory.set(false);
+    this.newInlineCategoryName.set('');
+  }
+
+  async addInlineCategory() {
+    const name = this.newInlineCategoryName().trim();
+    if (!name) return;
+
+    try {
+      const category = await this.databaseService.getOrCreateDefaultCategory(name);
+      this.categoryStore.addCategory(category);
+      this.selectedCategoryId = category.id;
+      this.isAddingInlineCategory.set(false);
+      this.newInlineCategoryName.set('');
+    } catch (error) {
+      console.error('Error adding category:', error);
+      alert('Failed to add category');
+    }
+  }
+
   getChangeClass(change?: number): string {
     if (change === undefined || change === null) return 'text-gray-500';
     return change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
@@ -574,7 +673,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     if (this.isSaving()) return;
 
     // Confirm if clearing both fields
-    if (!this.commentText.trim() && !this.categoryValue.trim() && (this.comment || this.category)) {
+    if (!this.commentText.trim() && !this.selectedCategoryId && (this.comment || this.category)) {
       if (!confirm('Are you sure you want to clear both category and comments?')) {
         return;
       }
@@ -584,18 +683,21 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
 
     try {
       // Update category
-      if (this.categoryValue.trim()) {
-        const category = await this.databaseService.getOrCreateDefaultCategory(
-          this.categoryValue.trim()
-        );
-        await this.databaseService.updateCompanyCategory(this.companyId, category.id);
-      } else {
-        // Clear category if empty
-        await this.databaseService.updateCompanyCategory(this.companyId, null);
-      }
+      await this.databaseService.updateCompanyCategory(this.companyId, this.selectedCategoryId);
 
       // Update comments
       await this.databaseService.updateCompanyComment(this.companyId, this.commentText.trim());
+
+      // Update local store instead of full refresh
+      const categoryName = this.selectedCategoryId 
+        ? this.categoryStore.categories().find(c => c.id === this.selectedCategoryId)?.name || ''
+        : '';
+      
+      this.stockStore.updateCompanyInMarketData(this.companyId, {
+        comments: this.commentText.trim(),
+        category_id: this.selectedCategoryId ?? undefined,
+        category: this.selectedCategoryId ? { id: this.selectedCategoryId, name: categoryName } : undefined,
+      });
 
       if (this.onSave) this.onSave();
       this.dialogService.close();
@@ -634,6 +736,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     this.changeClass = this.getChangeClass(company.market_data?.percentage_change);
     this.occurrenceCount = this.occurrenceCounts.get(company.ticker_symbol) || 0;
     this.categoryValue = company.category?.name || '';
+    this.selectedCategoryId = company.category_id || null;
     this.commentText = company.comments || '';
     this.category = company.category?.name || '';
     this.comment = company.comments || '';

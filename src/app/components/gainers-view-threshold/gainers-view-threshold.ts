@@ -348,7 +348,7 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => this.loadMarketData(),
+      onSave: () => {}, // No-op: store is updated optimistically
     });
   }
 
@@ -358,7 +358,7 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: () => {}, // No-op: store is updated optimistically
     });
   }
 
@@ -379,7 +379,7 @@ export class GainersViewThresholdComponent implements OnInit {
       occurrenceCount: company.occurrenceCount || 0,
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: () => {}, // No-op: store is updated optimistically
       companiesList: this.repeatedCompanies as any[], // Cast since it's compatible interface
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,

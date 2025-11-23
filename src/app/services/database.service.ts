@@ -117,6 +117,34 @@ export class DatabaseService {
     }
   }
 
+  async updateCategory(id: number, updates: Partial<Category>): Promise<void> {
+    try {
+      const { error } = await this.authService.supabase
+        .from('categories')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    try {
+      const { error } = await this.authService.supabase
+        .from('categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+  }
+
   // Company operations
   async getCompanies(): Promise<Company[]> {
     try {

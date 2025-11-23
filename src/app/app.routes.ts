@@ -26,6 +26,12 @@ export const routes: Routes = [
     canActivate: [DashboardGuard],
   },
   {
+    path: 'settings',
+    loadComponent: () =>
+      import('./components/settings/settings').then((m) => m.SettingsComponent),
+    canActivate: [DashboardGuard],
+  },
+  {
     path: 'register',
     loadComponent: () => import('./components/register/register').then((m) => m.RegisterComponent),
     canActivate: [AuthGuard],
