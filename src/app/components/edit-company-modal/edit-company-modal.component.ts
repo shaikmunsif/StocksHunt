@@ -695,7 +695,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
       
       this.stockStore.updateCompanyInMarketData(this.companyId, {
         comments: this.commentText.trim(),
-        category_id: this.selectedCategoryId ?? undefined,
+        category_id: this.selectedCategoryId || undefined,
         category: this.selectedCategoryId ? { id: this.selectedCategoryId, name: categoryName } : undefined,
       });
 
