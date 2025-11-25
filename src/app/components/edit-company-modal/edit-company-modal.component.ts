@@ -14,6 +14,7 @@ import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
 import { CompanyWithMarketData, MarketData } from '../../interfaces/stock-data.interface';
 import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
+import { CategoryStore } from '../../stores/category.store';
 
 @Component({
   selector: 'app-edit-company-modal',
@@ -226,15 +227,18 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
           >
             Category
           </label>
-          <input
-            type="text"
+          <select
             id="category"
             [(ngModel)]="categoryValue"
-            placeholder="Enter category (e.g., Good, Average, Poor)"
             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 h-12 sm:h-auto sm:py-2"
-          />
+          >
+            <option value="">-- Select Category --</option>
+            @for (cat of categoryStore.categories(); track cat.id) {
+            <option [value]="cat.name">{{ cat.name }}</option>
+            }
+          </select>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Common categories: Good, Average, Poor, Excellent
+            Choose a category for this company
           </p>
         </div>
 
@@ -256,6 +260,68 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
         </div>
       </div>
     </div>
+
+    <!-- Success/Error Message -->
+    @if (saveMessage()) {
+    <div
+      class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-slide-up"
+    >
+      <div
+        class="rounded-lg p-4 shadow-lg border-2"
+        [class.bg-green-50]="saveMessage()?.type === 'success'"
+        [class.border-green-400]="saveMessage()?.type === 'success'"
+        [class.bg-red-50]="saveMessage()?.type === 'error'"
+        [class.border-red-400]="saveMessage()?.type === 'error'"
+        [class.dark:bg-green-900]="saveMessage()?.type === 'success'"
+        [class.dark:border-green-600]="saveMessage()?.type === 'success'"
+        [class.dark:bg-red-900]="saveMessage()?.type === 'error'"
+        [class.dark:border-red-600]="saveMessage()?.type === 'error'"
+      >
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            @if (saveMessage()?.type === 'success') {
+            <svg
+              class="h-6 w-6 text-green-500 dark:text-green-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            } @else {
+            <svg
+              class="h-6 w-6 text-red-500 dark:text-red-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            }
+          </div>
+          <div class="ml-3 flex-1">
+            <p
+              class="text-sm font-semibold"
+              [class.text-green-800]="saveMessage()?.type === 'success'"
+              [class.text-red-800]="saveMessage()?.type === 'error'"
+              [class.dark:text-green-100]="saveMessage()?.type === 'success'"
+              [class.dark:text-red-100]="saveMessage()?.type === 'error'"
+            >
+              {{ saveMessage()?.message }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
 
     <div
       class="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700 sm:flex sm:items-center sm:justify-between gap-3"
@@ -357,7 +423,12 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   occurrenceCount!: number;
   category: string = '';
   comment: string = '';
-  onSave!: () => void;
+  onSave!: (update: {
+    companyId: string;
+    tickerSymbol: string;
+    categoryName: string | null;
+    comments: string;
+  }) => void;
 
   // Navigation properties
   companiesList: CompanyWithMarketData[] = [];
@@ -369,6 +440,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   isSaving = signal(false);
   isLoadingChart = signal(true);
   historicalData = signal<MarketData[]>([]);
+  saveMessage = signal<{ type: 'success' | 'error'; message: string } | null>(null);
 
   private chart?: Chart;
   private touchStartX = 0;
@@ -376,10 +448,12 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
   readonly breakpoint = inject(BreakpointService);
+  readonly categoryStore = inject(CategoryStore);
 
   ngOnInit() {
     this.categoryValue = this.category || '';
     this.commentText = this.comment || '';
+    this.categoryStore.loadCategories();
     this.loadHistoricalData();
   }
 
@@ -581,6 +655,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     }
 
     this.isSaving.set(true);
+    this.saveMessage.set(null); // Clear previous messages
 
     try {
       // Update category
@@ -597,11 +672,40 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
       // Update comments
       await this.databaseService.updateCompanyComment(this.companyId, this.commentText.trim());
 
-      if (this.onSave) this.onSave();
-      this.dialogService.close();
+      // Update parent component
+      if (this.onSave)
+        this.onSave({
+          companyId: this.companyId,
+          tickerSymbol: this.tickerSymbol,
+          categoryName: this.categoryValue.trim() ? this.categoryValue.trim() : null,
+          comments: this.commentText.trim(),
+        });
+
+      // Show success message
+      this.saveMessage.set({
+        type: 'success',
+        message: 'Changes saved successfully!',
+      });
+
+      // Auto-hide message after 3 seconds
+      setTimeout(() => {
+        this.saveMessage.set(null);
+      }, 3000);
+
+      // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
       console.error('Error saving company details:', error);
-      alert('Failed to save changes. Please try again.');
+
+      // Show error message
+      this.saveMessage.set({
+        type: 'error',
+        message: 'Failed to save changes. Please try again.',
+      });
+
+      // Auto-hide error message after 3 seconds
+      setTimeout(() => {
+        this.saveMessage.set(null);
+      }, 3000);
     } finally {
       this.isSaving.set(false);
     }

@@ -348,7 +348,17 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
+        const idx = this.repeatedCompanies.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          this.repeatedCompanies[idx] = {
+            ...this.repeatedCompanies[idx],
+            comments: update.comments?.trim() || '',
+          } as GroupedCompanyOccurrence;
+        }
+      },
     });
   }
 
@@ -358,7 +368,17 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
+        const idx = this.repeatedCompanies.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          this.repeatedCompanies[idx] = {
+            ...this.repeatedCompanies[idx],
+            comments: update.comments?.trim() || '',
+          } as GroupedCompanyOccurrence;
+        }
+      },
     });
   }
 
@@ -379,7 +399,27 @@ export class GainersViewThresholdComponent implements OnInit {
       occurrenceCount: company.occurrenceCount || 0,
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: {
+        companyId: string;
+        tickerSymbol: string;
+        categoryName: string | null;
+        comments: string;
+      }) => {
+        const idxToUpdate = this.repeatedCompanies.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idxToUpdate >= 0) {
+          const current = this.repeatedCompanies[idxToUpdate];
+          this.repeatedCompanies[idxToUpdate] = {
+            ...current,
+            comments: update.comments?.trim() || '',
+            category:
+              update.categoryName !== null
+                ? { ...(current.category || ({} as any)), name: update.categoryName }
+                : undefined,
+          } as GroupedCompanyOccurrence;
+        }
+      },
       companiesList: this.repeatedCompanies as any[], // Cast since it's compatible interface
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,

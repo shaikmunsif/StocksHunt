@@ -436,18 +436,29 @@
                     {{ company.occurrenceCount || 0 }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <td class="px-6 py-4 text-sm">
                   @if (company.comments) {
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="text-gray-700 dark:text-gray-300 truncate max-w-xs"
-                      [title]="company.comments"
-                    >
-                      {{ company.comments }}
-                    </span>
+                  <div class="flex items-start gap-2 max-w-md">
+                    <div class="flex-1 min-w-0">
+                      <p
+                        class="text-gray-700 dark:text-gray-300 break-words"
+                        [class.line-clamp-2]="!company.expanded"
+                        [title]="company.comments"
+                      >
+                        {{ company.comments }}
+                      </p>
+                      @if (company.comments.length > 100) {
+                      <button
+                        (click)="company.expanded = !company.expanded; $event.stopPropagation()"
+                        class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium mt-1"
+                      >
+                        {{ company.expanded ? 'Show less' : 'Show more' }}
+                      </button>
+                      }
+                    </div>
                     <button
                       (click)="editComment(company)"
-                      class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      class="flex-shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                       title="Edit comment"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

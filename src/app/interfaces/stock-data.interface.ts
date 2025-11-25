@@ -42,6 +42,7 @@ export interface MarketData {
 // Enhanced company with market data for display
 export interface CompanyWithMarketData extends Company {
   market_data?: MarketData;
+  expanded?: boolean; // For UI state - expandable comments
 }
 
 export interface CompanyWithOccurrence extends CompanyWithMarketData {
@@ -53,6 +54,7 @@ export interface GroupedCompanyOccurrence extends Company {
   averageChange: number;
   latestPrice: number;
   occurrences: MarketData[];
+  expanded?: boolean; // For UI state - expandable comments
 }
 
 export interface MarketDataResponse {
