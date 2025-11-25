@@ -5,6 +5,14 @@
 @tailwind utilities;
 
 @layer utilities {
+  /* Line clamping utility using -webkit-box properties
+   * Browser Support: These properties are well-supported in modern browsers:
+   * - Chrome/Edge: Full support
+   * - Firefox: Full support (since Firefox 68)
+   * - Safari: Full support
+   * Note: -webkit-box-orient is non-standard but widely supported
+   * For future-proofing, standard line-clamp may be used when browser support improves
+   */
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
