@@ -145,7 +145,7 @@ export class CommentModalComponent implements OnInit, OnDestroy {
         message: 'Comment saved successfully!',
       });
 
-      // Auto-hide message
+      // Auto-hide only for success
       if (this.messageTimeout) {
         clearTimeout(this.messageTimeout);
       }
@@ -163,13 +163,7 @@ export class CommentModalComponent implements OnInit, OnDestroy {
         message: 'Failed to save comment. Please try again.',
       });
 
-      // Auto-hide error message
-      if (this.messageTimeout) {
-        clearTimeout(this.messageTimeout);
-      }
-      this.messageTimeout = window.setTimeout(() => {
-        this.saveMessage.set(null);
-      }, this.AUTO_HIDE_DURATION);
+      // Keep error message visible until user acts (no auto-hide)
     } finally {
       this.isSaving.set(false);
     }

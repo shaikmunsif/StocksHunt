@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
-import { CompanyWithMarketData, MarketData } from '../../interfaces/stock-data.interface';
+import { CompanyWithMarketData, GroupedCompanyOccurrence, MarketData } from '../../interfaces/stock-data.interface';
 import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
 import { CategoryStore } from '../../stores/category.store';
 import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-message.component';
@@ -235,9 +235,11 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 h-12 sm:h-auto sm:py-2"
           >
             <option value="">-- Select Category --</option>
-            @for (cat of categoryStore.categories(); track cat.id) {
+            @if (categoryStore.loading()) {
+            <option disabled>Loading categories…</option>
+            } @else { @for (cat of categoryStore.categories(); track cat.id) {
             <option [value]="cat.name">{{ cat.name }}</option>
-            }
+            } }
           </select>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Choose a category for this company
@@ -374,7 +376,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   }) => void;
 
   // Navigation properties
-  companiesList: CompanyWithMarketData[] = [];
+  companiesList: (CompanyWithMarketData | GroupedCompanyOccurrence)[] = [];
   currentIndex: number = 0;
   occurrenceCounts: Map<string, number> = new Map();
 
@@ -395,9 +397,10 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   readonly breakpoint = inject(BreakpointService);
   readonly categoryStore = inject(CategoryStore);
 
-  ngOnInit() {
+  async ngOnInit() {
     this.categoryValue = this.category || '';
     this.commentText = this.comment || '';
+    // Load categories on init (non-blocking)
     this.categoryStore.loadCategories();
     this.loadHistoricalData();
   }
@@ -612,12 +615,25 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     this.saveMessage.set(null); // Clear previous messages
 
     try {
+      // Resolve chosen category name from existing categories only
+      const chosenName = this.categoryValue.trim();
+
       // Update category
-      if (this.categoryValue.trim()) {
-        const category = await this.databaseService.getOrCreateDefaultCategory(
-          this.categoryValue.trim()
-        );
-        await this.databaseService.updateCompanyCategory(this.companyId, category.id);
+      if (chosenName) {
+        // Ensure categories are available before resolving by name
+        if (!this.categoryStore.loaded()) {
+          await this.categoryStore.loadCategories();
+        }
+        const cat = this.categoryStore.categories().find((c) => c.name === chosenName);
+        if (!cat) {
+          this.saveMessage.set({
+            type: 'error',
+            message: 'Selected category not found. Please select an existing category.',
+          });
+          this.isSaving.set(false);
+          return;
+        }
+        await this.databaseService.updateCompanyCategory(this.companyId, cat.id);
       } else {
         // Clear category if empty
         await this.databaseService.updateCompanyCategory(this.companyId, null);
@@ -631,7 +647,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
         this.onSave({
           companyId: this.companyId,
           tickerSymbol: this.tickerSymbol,
-          categoryName: this.categoryValue.trim() ? this.categoryValue.trim() : null,
+          categoryName: chosenName || null,
           comments: this.commentText.trim(),
         });
 
@@ -641,7 +657,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
         message: 'Changes saved successfully!',
       });
 
-      // Auto-hide message
+      // Auto-hide only for success
       if (this.messageTimeout) {
         clearTimeout(this.messageTimeout);
       }
@@ -659,13 +675,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
         message: 'Failed to save changes. Please try again.',
       });
 
-      // Auto-hide error message
-      if (this.messageTimeout) {
-        clearTimeout(this.messageTimeout);
-      }
-      this.messageTimeout = window.setTimeout(() => {
-        this.saveMessage.set(null);
-      }, this.AUTO_HIDE_DURATION);
+      // Keep error message visible until user acts (no auto-hide)
     } finally {
       this.isSaving.set(false);
     }
@@ -689,13 +699,15 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private loadCompanyData(company: CompanyWithMarketData): void {
+  private loadCompanyData(company: CompanyWithMarketData | GroupedCompanyOccurrence): void {
     this.companyId = company.id;
     this.companyName = company.name;
     this.tickerSymbol = company.ticker_symbol;
-    this.currentPrice = this.formatPrice(company.market_data?.current_price);
-    this.percentageChange = this.formatChange(company.market_data?.percentage_change);
-    this.changeClass = this.getChangeClass(company.market_data?.percentage_change);
+    const currentPrice = 'market_data' in company ? company.market_data?.current_price : (company as GroupedCompanyOccurrence).latestPrice;
+    const percentChange = 'market_data' in company ? company.market_data?.percentage_change : (company as GroupedCompanyOccurrence).averageChange;
+    this.currentPrice = this.formatPrice(currentPrice);
+    this.percentageChange = this.formatChange(percentChange);
+    this.changeClass = this.getChangeClass(percentChange);
     this.occurrenceCount = this.occurrenceCounts.get(company.ticker_symbol) || 0;
     this.categoryValue = company.category?.name || '';
     this.commentText = company.comments || '';

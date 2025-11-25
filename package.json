@@ -42,6 +42,7 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@angular/build": "^20.3.10",
     "@angular/cli": "^20.3.10",
     "@angular/compiler-cli": "^20.3.0",

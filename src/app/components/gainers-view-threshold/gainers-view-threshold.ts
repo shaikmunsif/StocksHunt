@@ -357,14 +357,16 @@ export class GainersViewThresholdComponent implements OnInit {
       tickerSymbol: company.ticker_symbol,
       comment: '',
       onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
-        const idx = this.repeatedCompanies.findIndex(
+        const list = this.repeatedCompanies;
+        const idx = list.findIndex(
           (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
         );
         if (idx >= 0) {
-          this.repeatedCompanies[idx] = {
-            ...this.repeatedCompanies[idx],
+          const updated: GroupedCompanyOccurrence = {
+            ...list[idx],
             comments: update.comments?.trim() || '',
-          } as GroupedCompanyOccurrence;
+          };
+          this.repeatedCompanies = [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
         }
       },
     });
@@ -377,14 +379,16 @@ export class GainersViewThresholdComponent implements OnInit {
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
       onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
-        const idx = this.repeatedCompanies.findIndex(
+        const list = this.repeatedCompanies;
+        const idx = list.findIndex(
           (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
         );
         if (idx >= 0) {
-          this.repeatedCompanies[idx] = {
-            ...this.repeatedCompanies[idx],
+          const updated: GroupedCompanyOccurrence = {
+            ...list[idx],
             comments: update.comments?.trim() || '',
-          } as GroupedCompanyOccurrence;
+          };
+          this.repeatedCompanies = [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
         }
       },
     });
@@ -413,22 +417,30 @@ export class GainersViewThresholdComponent implements OnInit {
         categoryName: string | null;
         comments: string;
       }) => {
-        const idxToUpdate = this.repeatedCompanies.findIndex(
+        const list = this.repeatedCompanies;
+        const idxToUpdate = list.findIndex(
           (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
         );
         if (idxToUpdate >= 0) {
-          const current = this.repeatedCompanies[idxToUpdate];
-          this.repeatedCompanies[idxToUpdate] = {
+          const current = list[idxToUpdate];
+          const updated: GroupedCompanyOccurrence = {
             ...current,
             comments: update.comments?.trim() || '',
             category:
               update.categoryName !== null
-                ? { ...(current.category || ({} as any)), name: update.categoryName }
+                ? current.category
+                  ? { ...current.category, name: update.categoryName }
+                  : undefined
                 : undefined,
-          } as GroupedCompanyOccurrence;
+          };
+          this.repeatedCompanies = [
+            ...list.slice(0, idxToUpdate),
+            updated,
+            ...list.slice(idxToUpdate + 1),
+          ];
         }
       },
-      companiesList: this.repeatedCompanies as any[], // Cast since it's compatible interface
+      companiesList: this.repeatedCompanies,
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,
     });

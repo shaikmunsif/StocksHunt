@@ -8,21 +8,23 @@ import {
   Injector,
   inject,
   effect,
-  OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import { Router, NavigationStart } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { DialogComponent } from './dialog.component';
 import { AuthService } from '../../services/auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class DialogService implements OnDestroy {
+export class DialogService {
   private dialogComponentRef?: ComponentRef<DialogComponent>;
   private authService = inject(AuthService);
   private router = inject(Router);
-  private routerSubscription?: any;
+  private routerSubscription?: Subscription;
+  private destroyRef = inject(DestroyRef);
 
   constructor(private appRef: ApplicationRef, private injector: EnvironmentInjector) {
     this.createDialogComponent();
@@ -52,6 +54,11 @@ export class DialogService implements OnDestroy {
           this.close();
         }
       });
+
+    // Ensure cleanup on app destroy (for completeness)
+    this.destroyRef.onDestroy(() => {
+      this.routerSubscription?.unsubscribe();
+    });
   }
 
   private createDialogComponent() {
@@ -75,9 +82,5 @@ export class DialogService implements OnDestroy {
     this.dialogComponentRef?.instance.close();
   }
 
-  ngOnDestroy() {
-    if (this.routerSubscription) {
-      this.routerSubscription.unsubscribe();
-    }
-  }
+  // Note: Service providedIn: 'root' lives for app lifetime; explicit teardown is handled via DestroyRef
 }

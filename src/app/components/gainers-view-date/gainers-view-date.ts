@@ -34,11 +34,12 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   // Occurrence tracking
   occurrenceCounts: Map<string, number> = new Map();
 
-  // Sorting properties
-  sortColumn: string = 'occurrence_count';
-  sortDirection: 'asc' | 'desc' = 'desc';
+  // Sorting properties (default restored per review)
+  sortColumn: string = 'ticker_symbol';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   private progressInterval?: number;
+  private currentRequestId = 0;
 
   constructor(
     private databaseService: DatabaseService,
@@ -91,6 +92,7 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
     this.error = null;
 
     try {
+      const requestId = ++this.currentRequestId;
       // Step 1: Fetch market data (0-20%) with simulated incremental progress
       this.loadingProgress = 5;
 
@@ -128,6 +130,11 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
           }))
         );
         this.loadingProgress = 25;
+      }
+
+      // If a newer request started, abort applying results
+      if (requestId !== this.currentRequestId) {
+        return;
       }
 
       this.marketData = data;
@@ -354,17 +361,19 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   async loadOccurrenceCounts(companies: CompanyWithMarketData[]): Promise<void> {
     this.occurrenceCounts.clear();
     const totalCompanies = companies.length;
-    const baseProgress = 25; // Starting from 25%
-    const progressRange = 70; // Will go from 25% to 95% (70 points)
+    const baseProgress = 25;
+    const progressRange = 70;
+    let completed = 0;
 
-    for (let i = 0; i < companies.length; i++) {
-      const company = companies[i];
-      const count = await this.databaseService.getCompanyOccurrenceCount(company.ticker_symbol);
-      this.occurrenceCounts.set(company.ticker_symbol, count);
-
-      // Calculate realistic incremental progress for each company (25-95%)
-      this.loadingProgress = baseProgress + Math.round(((i + 1) / totalCompanies) * progressRange);
-    }
+    await Promise.all(
+      companies.map(async (company) => {
+        const count = await this.databaseService.getCompanyOccurrenceCount(company.ticker_symbol);
+        this.occurrenceCounts.set(company.ticker_symbol, count);
+        completed += 1;
+        this.loadingProgress =
+          baseProgress + Math.round((completed / totalCompanies) * progressRange);
+      })
+    );
   }
 
   getOccurrenceCount(company: CompanyWithMarketData): number {
@@ -392,9 +401,13 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
           (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
         );
         if (idx >= 0) {
-          list[idx] = {
+          const updated = {
             ...list[idx],
             comments: update.comments?.trim() || '',
+          } as CompanyWithMarketData;
+          this.marketData = {
+            ...this.marketData!,
+            companies: [...list.slice(0, idx), updated, ...list.slice(idx + 1)],
           };
         }
 
@@ -416,9 +429,13 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
           (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
         );
         if (idx >= 0) {
-          list[idx] = {
+          const updated = {
             ...list[idx],
             comments: update.comments?.trim() || '',
+          } as CompanyWithMarketData;
+          this.marketData = {
+            ...this.marketData!,
+            companies: [...list.slice(0, idx), updated, ...list.slice(idx + 1)],
           };
         }
 
@@ -451,14 +468,20 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
         );
         if (idx >= 0) {
           const current = list[idx];
-          list[idx] = {
+          const updated: CompanyWithMarketData = {
             ...current,
             comments: update.comments?.trim() || '',
             category:
               update.categoryName !== null
-                ? { ...(current.category || ({} as any)), name: update.categoryName }
+                ? current.category
+                  ? { ...current.category, name: update.categoryName }
+                  : undefined
                 : undefined,
-          } as CompanyWithMarketData;
+          };
+          this.marketData = {
+            ...this.marketData!,
+            companies: [...list.slice(0, idx), updated, ...list.slice(idx + 1)],
+          };
         }
 
         this.companyStore.updateComment(update.companyId, update.comments ?? '');
