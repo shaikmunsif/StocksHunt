@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconsComponent } from '../svg';
 
 export interface ToastMessage {
   type: 'success' | 'error';
@@ -9,7 +9,7 @@ export interface ToastMessage {
 @Component({
   selector: 'app-toast-message',
   standalone: true,
-  imports: [CommonModule],
+  imports: [IconsComponent],
   template: `
     @if (message) {
     <div
@@ -31,33 +31,16 @@ export interface ToastMessage {
       >
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            @if (message.type === 'success') {
-            <svg
-              class="h-6 w-6 text-green-500 dark:text-green-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            } @else {
-            <svg
-              class="h-6 w-6 text-red-500 dark:text-red-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            }
+            <app-icon
+              [iconName]="message.type === 'success' ? 'success' : 'error-circle'"
+              width="24"
+              height="24"
+              [className]="
+                message.type === 'success'
+                  ? 'text-green-500 dark:text-green-400'
+                  : 'text-red-500 dark:text-red-400'
+              "
+            />
           </div>
           <div class="ml-3 flex-1">
             <p
