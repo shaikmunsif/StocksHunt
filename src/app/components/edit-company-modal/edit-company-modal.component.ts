@@ -16,11 +16,12 @@ import { BreakpointService } from '../../services/breakpoint.service';
 import { CompanyWithMarketData, MarketData } from '../../interfaces/stock-data.interface';
 import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
 import { CategoryStore } from '../../stores/category.store';
+import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-message.component';
 
 @Component({
   selector: 'app-edit-company-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ToastMessageComponent],
   template: `
     <div
       class="max-h-[85vh] overflow-y-auto"
@@ -263,69 +264,7 @@ import { CategoryStore } from '../../stores/category.store';
     </div>
 
     <!-- Success/Error Message -->
-    @if (saveMessage()) {
-    <div
-      class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-slide-up"
-      role="alert"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <div
-        class="rounded-lg p-4 shadow-lg border-2"
-        [class.bg-green-50]="saveMessage()?.type === 'success'"
-        [class.border-green-400]="saveMessage()?.type === 'success'"
-        [class.bg-red-50]="saveMessage()?.type === 'error'"
-        [class.border-red-400]="saveMessage()?.type === 'error'"
-        [class.dark:bg-green-900]="saveMessage()?.type === 'success'"
-        [class.dark:border-green-600]="saveMessage()?.type === 'success'"
-        [class.dark:bg-red-900]="saveMessage()?.type === 'error'"
-        [class.dark:border-red-600]="saveMessage()?.type === 'error'"
-      >
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            @if (saveMessage()?.type === 'success') {
-            <svg
-              class="h-6 w-6 text-green-500 dark:text-green-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            } @else {
-            <svg
-              class="h-6 w-6 text-red-500 dark:text-red-400"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            }
-          </div>
-          <div class="ml-3 flex-1">
-            <p
-              class="text-sm font-semibold"
-              [class.text-green-800]="saveMessage()?.type === 'success'"
-              [class.text-red-800]="saveMessage()?.type === 'error'"
-              [class.dark:text-green-100]="saveMessage()?.type === 'success'"
-              [class.dark:text-red-100]="saveMessage()?.type === 'error'"
-            >
-              {{ saveMessage()?.message }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-    }
+    <app-toast-message [message]="saveMessage()" />
 
     <div
       class="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700 sm:flex sm:items-center sm:justify-between gap-3"
@@ -444,7 +383,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   isSaving = signal(false);
   isLoadingChart = signal(true);
   historicalData = signal<MarketData[]>([]);
-  saveMessage = signal<{ type: 'success' | 'error'; message: string } | null>(null);
+  saveMessage = signal<ToastMessage | null>(null);
 
   private readonly AUTO_HIDE_DURATION = 3000;
   private messageTimeout?: number;
