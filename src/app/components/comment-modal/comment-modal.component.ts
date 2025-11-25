@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
@@ -50,6 +50,9 @@ import { DatabaseService } from '../../services/database.service';
     @if (saveMessage()) {
     <div
       class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-slide-up"
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <div
         class="rounded-lg p-4 shadow-lg border-2"
@@ -149,7 +152,7 @@ import { DatabaseService } from '../../services/database.service';
     </div>
   `,
 })
-export class CommentModalComponent {
+export class CommentModalComponent implements OnInit, OnDestroy {
   // Inputs
   companyId!: string;
   companyName!: string;
@@ -161,11 +164,19 @@ export class CommentModalComponent {
   isSaving = signal(false);
   saveMessage = signal<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  private readonly AUTO_HIDE_DURATION = 3000;
+  private messageTimeout?: number;
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
 
   ngOnInit() {
     this.commentText = this.comment || '';
+  }
+
+  ngOnDestroy() {
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
+    }
   }
 
   async save() {
@@ -195,10 +206,13 @@ export class CommentModalComponent {
         message: 'Comment saved successfully!',
       });
 
-      // Auto-hide message after 3 seconds
-      setTimeout(() => {
+      // Auto-hide message
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+      }
+      this.messageTimeout = window.setTimeout(() => {
         this.saveMessage.set(null);
-      }, 3000);
+      }, this.AUTO_HIDE_DURATION);
 
       // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
@@ -210,10 +224,13 @@ export class CommentModalComponent {
         message: 'Failed to save comment. Please try again.',
       });
 
-      // Auto-hide error message after 3 seconds
-      setTimeout(() => {
+      // Auto-hide error message
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+      }
+      this.messageTimeout = window.setTimeout(() => {
         this.saveMessage.set(null);
-      }, 3000);
+      }, this.AUTO_HIDE_DURATION);
     } finally {
       this.isSaving.set(false);
     }

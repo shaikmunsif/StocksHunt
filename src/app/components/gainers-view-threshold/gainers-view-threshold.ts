@@ -342,6 +342,14 @@ export class GainersViewThresholdComponent implements OnInit {
     return company.ticker_symbol;
   }
 
+  /**
+   * Toggles the expanded state of a company's comment section.
+   * Using a method ensures proper change detection.
+   */
+  toggleExpanded(company: GroupedCompanyOccurrence): void {
+    company.expanded = !company.expanded;
+  }
+
   addComment(company: GroupedCompanyOccurrence): void {
     this.dialogService.open(CommentModalComponent, {
       companyId: company.id,

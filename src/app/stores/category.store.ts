@@ -19,6 +19,11 @@ export const CategoryStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withMethods((store, databaseService = inject(DatabaseService)) => ({
+    /**
+     * Loads categories from the database if not already loaded or loading.
+     * Implements a caching mechanism to prevent redundant API calls.
+     * @returns Promise that resolves when categories are loaded or rejects on error
+     */
     async loadCategories() {
       // Don't reload if already loaded or currently loading
       if (store.loaded() || store.loading()) {
@@ -43,6 +48,9 @@ export const CategoryStore = signalStore(
       }
     },
 
+    /**
+     * Resets the store to its initial state, clearing all categories and flags.
+     */
     reset() {
       patchState(store, initialState);
     },

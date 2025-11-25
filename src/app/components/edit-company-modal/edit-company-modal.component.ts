@@ -3,6 +3,7 @@ import {
   inject,
   signal,
   OnInit,
+  OnDestroy,
   ViewChild,
   ElementRef,
   AfterViewInit,
@@ -265,6 +266,9 @@ import { CategoryStore } from '../../stores/category.store';
     @if (saveMessage()) {
     <div
       class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-slide-up"
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <div
         class="rounded-lg p-4 shadow-lg border-2"
@@ -442,6 +446,8 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   historicalData = signal<MarketData[]>([]);
   saveMessage = signal<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  private readonly AUTO_HIDE_DURATION = 3000;
+  private messageTimeout?: number;
   private chart?: Chart;
   private touchStartX = 0;
   private touchStartY = 0;
@@ -455,6 +461,15 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     this.commentText = this.comment || '';
     this.categoryStore.loadCategories();
     this.loadHistoricalData();
+  }
+
+  ngOnDestroy() {
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
+    }
+    if (this.chart) {
+      this.chart.destroy();
+    }
   }
 
   ngAfterViewInit() {
@@ -687,10 +702,13 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
         message: 'Changes saved successfully!',
       });
 
-      // Auto-hide message after 3 seconds
-      setTimeout(() => {
+      // Auto-hide message
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+      }
+      this.messageTimeout = window.setTimeout(() => {
         this.saveMessage.set(null);
-      }, 3000);
+      }, this.AUTO_HIDE_DURATION);
 
       // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
@@ -702,10 +720,13 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
         message: 'Failed to save changes. Please try again.',
       });
 
-      // Auto-hide error message after 3 seconds
-      setTimeout(() => {
+      // Auto-hide error message
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+      }
+      this.messageTimeout = window.setTimeout(() => {
         this.saveMessage.set(null);
-      }, 3000);
+      }, this.AUTO_HIDE_DURATION);
     } finally {
       this.isSaving.set(false);
     }

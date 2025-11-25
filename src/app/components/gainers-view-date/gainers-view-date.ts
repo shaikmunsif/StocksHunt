@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +19,7 @@ import { CompanyStore } from '../../stores/company.store';
   templateUrl: './gainers-view-date.html',
   styleUrls: ['./gainers-view-date.scss'],
 })
-export class GainersViewDateComponent implements OnInit {
+export class GainersViewDateComponent implements OnInit, OnDestroy {
   marketData: MarketDataResponse | null = null;
   isLoading = false;
   loadingProgress = 0;
@@ -37,6 +37,8 @@ export class GainersViewDateComponent implements OnInit {
   // Sorting properties
   sortColumn: string = 'occurrence_count';
   sortDirection: 'asc' | 'desc' = 'desc';
+
+  private progressInterval?: number;
 
   constructor(
     private databaseService: DatabaseService,
@@ -93,14 +95,20 @@ export class GainersViewDateComponent implements OnInit {
       this.loadingProgress = 5;
 
       // Simulate realistic loading progress during API call
-      const progressInterval = setInterval(() => {
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+      }
+      this.progressInterval = window.setInterval(() => {
         if (this.loadingProgress < 18) {
           this.loadingProgress += 1;
         }
       }, 50); // Increment every 50ms
 
       const data = await this.databaseService.getMarketDataByDate(this.selectedDate);
-      clearInterval(progressInterval);
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+        this.progressInterval = undefined;
+      }
       this.loadingProgress = 20;
 
       // Step 2: Filter and process data (20-25%)
@@ -129,24 +137,29 @@ export class GainersViewDateComponent implements OnInit {
         await this.loadOccurrenceCounts(data.companies);
       }
 
-      // Step 4: Apply sorting (95-98%)
+      // Step 4: Apply sorting (95-100%)
       this.loadingProgress = 95;
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
       if (data.companies) {
         this.sortData(data.companies);
       }
-      this.loadingProgress = 98;
-
-      // Step 5: Complete (98-100%)
-      await new Promise((resolve) => setTimeout(resolve, 100));
       this.loadingProgress = 100;
     } catch (error) {
       console.error('Error loading market data:', error);
       this.error = 'Failed to load market data. Please try again.';
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+        this.progressInterval = undefined;
+      }
     } finally {
       this.isLoading = false;
       this.loadingProgress = 0;
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
     }
   }
 
@@ -356,6 +369,14 @@ export class GainersViewDateComponent implements OnInit {
 
   getOccurrenceCount(company: CompanyWithMarketData): number {
     return this.occurrenceCounts.get(company.ticker_symbol) || 0;
+  }
+
+  /**
+   * Toggles the expanded state of a company's comment section.
+   * Using a method ensures proper change detection.
+   */
+  toggleExpanded(company: CompanyWithMarketData): void {
+    company.expanded = !company.expanded;
   }
 
   addComment(company: CompanyWithMarketData): void {
