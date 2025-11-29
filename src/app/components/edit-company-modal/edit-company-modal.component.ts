@@ -13,7 +13,11 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
-import { CompanyWithMarketData, GroupedCompanyOccurrence, MarketData } from '../../interfaces/stock-data.interface';
+import {
+  CompanyWithMarketData,
+  GroupedCompanyOccurrence,
+  MarketData,
+} from '../../interfaces/stock-data.interface';
 import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
 import { CategoryStore } from '../../stores/category.store';
 import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-message.component';
@@ -703,8 +707,14 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     this.companyId = company.id;
     this.companyName = company.name;
     this.tickerSymbol = company.ticker_symbol;
-    const currentPrice = 'market_data' in company ? company.market_data?.current_price : (company as GroupedCompanyOccurrence).latestPrice;
-    const percentChange = 'market_data' in company ? company.market_data?.percentage_change : (company as GroupedCompanyOccurrence).averageChange;
+    const currentPrice =
+      'market_data' in company
+        ? company.market_data?.current_price
+        : (company as GroupedCompanyOccurrence).latestPrice;
+    const percentChange =
+      'market_data' in company
+        ? company.market_data?.percentage_change
+        : (company as GroupedCompanyOccurrence).averageChange;
     this.currentPrice = this.formatPrice(currentPrice);
     this.percentageChange = this.formatChange(percentChange);
     this.changeClass = this.getChangeClass(percentChange);
