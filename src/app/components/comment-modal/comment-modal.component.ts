@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
+import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-message.component';
 
 @Component({
   selector: 'app-comment-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ToastMessageComponent],
   template: `
     <div class="sm:flex sm:items-start">
       <div
@@ -45,34 +46,65 @@ import { DatabaseService } from '../../services/database.service';
         </div>
       </div>
     </div>
+
+    <!-- Success/Error Message -->
+    <app-toast-message [message]="saveMessage()"></app-toast-message>
+
     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
       <button
         type="button"
         (click)="save()"
-        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-3 sm:py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm min-h-[48px] sm:min-h-0"
+        [disabled]="isSaving()"
+        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-3 sm:py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm min-h-[48px] sm:min-h-0 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Save
+        @if (isSaving()) {
+        <svg
+          class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        Saving... } @else { Save }
       </button>
       <button
         type="button"
         (click)="cancel()"
-        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-3 sm:py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 min-h-[48px] sm:min-h-0"
+        [disabled]="isSaving()"
+        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-3 sm:py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 min-h-[48px] sm:min-h-0 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Cancel
       </button>
     </div>
   `,
 })
-export class CommentModalComponent {
+export class CommentModalComponent implements OnInit, OnDestroy {
   // Inputs
   companyId!: string;
   companyName!: string;
   tickerSymbol!: string;
   comment: string = '';
-  onSave!: () => void;
+  onSave!: (update: { companyId: string; tickerSymbol: string; comments: string }) => void;
 
   commentText: string = '';
+  isSaving = signal(false);
+  saveMessage = signal<ToastMessage | null>(null);
 
+  private readonly AUTO_HIDE_DURATION = 3000;
+  private messageTimeout?: number;
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
 
@@ -80,20 +112,60 @@ export class CommentModalComponent {
     this.commentText = this.comment || '';
   }
 
+  ngOnDestroy() {
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
+    }
+  }
+
   async save() {
+    if (this.isSaving()) return;
+
     if (!this.commentText.trim() && this.comment) {
       if (!confirm('Are you sure you want to erase this comment?')) {
         return;
       }
     }
 
+    this.isSaving.set(true);
+    this.saveMessage.set(null); // Clear previous messages
+
     try {
       await this.databaseService.updateCompanyComment(this.companyId, this.commentText);
-      if (this.onSave) this.onSave();
-      this.dialogService.close();
+      if (this.onSave)
+        this.onSave({
+          companyId: this.companyId,
+          tickerSymbol: this.tickerSymbol,
+          comments: this.commentText,
+        });
+
+      // Show success message
+      this.saveMessage.set({
+        type: 'success',
+        message: 'Comment saved successfully!',
+      });
+
+      // Auto-hide only for success
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+      }
+      this.messageTimeout = window.setTimeout(() => {
+        this.saveMessage.set(null);
+      }, this.AUTO_HIDE_DURATION);
+
+      // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
       console.error('Error saving comment:', error);
-      alert('Failed to save comment');
+
+      // Show error message
+      this.saveMessage.set({
+        type: 'error',
+        message: 'Failed to save comment. Please try again.',
+      });
+
+      // Keep error message visible until user acts (no auto-hide)
+    } finally {
+      this.isSaving.set(false);
     }
   }
 

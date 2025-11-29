@@ -342,13 +342,33 @@ export class GainersViewThresholdComponent implements OnInit {
     return company.ticker_symbol;
   }
 
+  /**
+   * Toggles the expanded state of a company's comment section.
+   * Using a method ensures proper change detection.
+   */
+  toggleExpanded(company: GroupedCompanyOccurrence): void {
+    company.expanded = !company.expanded;
+  }
+
   addComment(company: GroupedCompanyOccurrence): void {
     this.dialogService.open(CommentModalComponent, {
       companyId: company.id,
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
+        const list = this.repeatedCompanies;
+        const idx = list.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          const updated: GroupedCompanyOccurrence = {
+            ...list[idx],
+            comments: update.comments?.trim() || '',
+          };
+          this.repeatedCompanies = [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
+        }
+      },
     });
   }
 
@@ -358,7 +378,19 @@ export class GainersViewThresholdComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
+        const list = this.repeatedCompanies;
+        const idx = list.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          const updated: GroupedCompanyOccurrence = {
+            ...list[idx],
+            comments: update.comments?.trim() || '',
+          };
+          this.repeatedCompanies = [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
+        }
+      },
     });
   }
 
@@ -379,8 +411,36 @@ export class GainersViewThresholdComponent implements OnInit {
       occurrenceCount: company.occurrenceCount || 0,
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
-      companiesList: this.repeatedCompanies as any[], // Cast since it's compatible interface
+      onSave: (update: {
+        companyId: string;
+        tickerSymbol: string;
+        categoryName: string | null;
+        comments: string;
+      }) => {
+        const list = this.repeatedCompanies;
+        const idxToUpdate = list.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idxToUpdate >= 0) {
+          const current = list[idxToUpdate];
+          const updated: GroupedCompanyOccurrence = {
+            ...current,
+            comments: update.comments?.trim() || '',
+            category:
+              update.categoryName !== null
+                ? current.category
+                  ? { ...current.category, name: update.categoryName }
+                  : undefined
+                : undefined,
+          };
+          this.repeatedCompanies = [
+            ...list.slice(0, idxToUpdate),
+            updated,
+            ...list.slice(idxToUpdate + 1),
+          ];
+        }
+      },
+      companiesList: this.repeatedCompanies,
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,
     });

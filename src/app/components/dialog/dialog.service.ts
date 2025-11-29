@@ -8,7 +8,11 @@ import {
   Injector,
   inject,
   effect,
+  DestroyRef,
 } from '@angular/core';
+import { Router, NavigationStart } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { DialogComponent } from './dialog.component';
 import { AuthService } from '../../services/auth.service';
 
@@ -18,10 +22,14 @@ import { AuthService } from '../../services/auth.service';
 export class DialogService {
   private dialogComponentRef?: ComponentRef<DialogComponent>;
   private authService = inject(AuthService);
+  private router = inject(Router);
+  private routerSubscription?: Subscription;
+  private destroyRef = inject(DestroyRef);
 
   constructor(private appRef: ApplicationRef, private injector: EnvironmentInjector) {
     this.createDialogComponent();
     this.setupAuthListener();
+    this.setupRouterListener();
   }
 
   private setupAuthListener() {
@@ -31,6 +39,25 @@ export class DialogService {
       if (!user && this.dialogComponentRef?.instance.isOpen()) {
         this.close();
       }
+    });
+  }
+
+  /**
+   * Sets up a listener to automatically close dialogs when route navigation starts.
+   * This prevents dialogs from persisting across different views, maintaining proper context.
+   */
+  private setupRouterListener() {
+    this.routerSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationStart))
+      .subscribe(() => {
+        if (this.dialogComponentRef?.instance.isOpen()) {
+          this.close();
+        }
+      });
+
+    // Ensure cleanup on app destroy (for completeness)
+    this.destroyRef.onDestroy(() => {
+      this.routerSubscription?.unsubscribe();
     });
   }
 
@@ -54,4 +81,6 @@ export class DialogService {
   close() {
     this.dialogComponentRef?.instance.close();
   }
+
+  // Note: Service providedIn: 'root' lives for app lifetime; explicit teardown is handled via DestroyRef
 }

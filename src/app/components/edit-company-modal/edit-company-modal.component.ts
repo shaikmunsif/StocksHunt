@@ -3,6 +3,7 @@ import {
   inject,
   signal,
   OnInit,
+  OnDestroy,
   ViewChild,
   ElementRef,
   AfterViewInit,
@@ -12,13 +13,19 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
-import { CompanyWithMarketData, MarketData } from '../../interfaces/stock-data.interface';
+import {
+  CompanyWithMarketData,
+  GroupedCompanyOccurrence,
+  MarketData,
+} from '../../interfaces/stock-data.interface';
 import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
+import { CategoryStore } from '../../stores/category.store';
+import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-message.component';
 
 @Component({
   selector: 'app-edit-company-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ToastMessageComponent],
   template: `
     <div
       class="max-h-[85vh] overflow-y-auto"
@@ -226,15 +233,20 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
           >
             Category
           </label>
-          <input
-            type="text"
+          <select
             id="category"
             [(ngModel)]="categoryValue"
-            placeholder="Enter category (e.g., Good, Average, Poor)"
             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 h-12 sm:h-auto sm:py-2"
-          />
+          >
+            <option value="">-- Select Category --</option>
+            @if (categoryStore.loading()) {
+            <option disabled>Loading categories…</option>
+            } @else { @for (cat of categoryStore.categories(); track cat.id) {
+            <option [value]="cat.name">{{ cat.name }}</option>
+            } }
+          </select>
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Common categories: Good, Average, Poor, Excellent
+            Choose a category for this company
           </p>
         </div>
 
@@ -256,6 +268,9 @@ import type { Chart, ChartConfiguration, TooltipItem } from 'chart.js';
         </div>
       </div>
     </div>
+
+    <!-- Success/Error Message -->
+    <app-toast-message [message]="saveMessage()"></app-toast-message>
 
     <div
       class="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700 sm:flex sm:items-center sm:justify-between gap-3"
@@ -357,10 +372,15 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   occurrenceCount!: number;
   category: string = '';
   comment: string = '';
-  onSave!: () => void;
+  onSave!: (update: {
+    companyId: string;
+    tickerSymbol: string;
+    categoryName: string | null;
+    comments: string;
+  }) => void;
 
   // Navigation properties
-  companiesList: CompanyWithMarketData[] = [];
+  companiesList: (CompanyWithMarketData | GroupedCompanyOccurrence)[] = [];
   currentIndex: number = 0;
   occurrenceCounts: Map<string, number> = new Map();
 
@@ -369,18 +389,33 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   isSaving = signal(false);
   isLoadingChart = signal(true);
   historicalData = signal<MarketData[]>([]);
+  saveMessage = signal<ToastMessage | null>(null);
 
+  private readonly AUTO_HIDE_DURATION = 3000;
+  private messageTimeout?: number;
   private chart?: Chart;
   private touchStartX = 0;
   private touchStartY = 0;
   private dialogService = inject(DialogService);
   private databaseService = inject(DatabaseService);
   readonly breakpoint = inject(BreakpointService);
+  readonly categoryStore = inject(CategoryStore);
 
-  ngOnInit() {
+  async ngOnInit() {
     this.categoryValue = this.category || '';
     this.commentText = this.comment || '';
+    // Load categories on init (non-blocking)
+    this.categoryStore.loadCategories();
     this.loadHistoricalData();
+  }
+
+  ngOnDestroy() {
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
+    }
+    if (this.chart) {
+      this.chart.destroy();
+    }
   }
 
   ngAfterViewInit() {
@@ -581,14 +616,28 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     }
 
     this.isSaving.set(true);
+    this.saveMessage.set(null); // Clear previous messages
 
     try {
+      // Resolve chosen category name from existing categories only
+      const chosenName = this.categoryValue.trim();
+
       // Update category
-      if (this.categoryValue.trim()) {
-        const category = await this.databaseService.getOrCreateDefaultCategory(
-          this.categoryValue.trim()
-        );
-        await this.databaseService.updateCompanyCategory(this.companyId, category.id);
+      if (chosenName) {
+        // Ensure categories are available before resolving by name
+        if (!this.categoryStore.loaded()) {
+          await this.categoryStore.loadCategories();
+        }
+        const cat = this.categoryStore.categories().find((c) => c.name === chosenName);
+        if (!cat) {
+          this.saveMessage.set({
+            type: 'error',
+            message: 'Selected category not found. Please select an existing category.',
+          });
+          this.isSaving.set(false);
+          return;
+        }
+        await this.databaseService.updateCompanyCategory(this.companyId, cat.id);
       } else {
         // Clear category if empty
         await this.databaseService.updateCompanyCategory(this.companyId, null);
@@ -597,11 +646,40 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
       // Update comments
       await this.databaseService.updateCompanyComment(this.companyId, this.commentText.trim());
 
-      if (this.onSave) this.onSave();
-      this.dialogService.close();
+      // Update parent component
+      if (this.onSave)
+        this.onSave({
+          companyId: this.companyId,
+          tickerSymbol: this.tickerSymbol,
+          categoryName: chosenName || null,
+          comments: this.commentText.trim(),
+        });
+
+      // Show success message
+      this.saveMessage.set({
+        type: 'success',
+        message: 'Changes saved successfully!',
+      });
+
+      // Auto-hide only for success
+      if (this.messageTimeout) {
+        clearTimeout(this.messageTimeout);
+      }
+      this.messageTimeout = window.setTimeout(() => {
+        this.saveMessage.set(null);
+      }, this.AUTO_HIDE_DURATION);
+
+      // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
       console.error('Error saving company details:', error);
-      alert('Failed to save changes. Please try again.');
+
+      // Show error message
+      this.saveMessage.set({
+        type: 'error',
+        message: 'Failed to save changes. Please try again.',
+      });
+
+      // Keep error message visible until user acts (no auto-hide)
     } finally {
       this.isSaving.set(false);
     }
@@ -625,13 +703,21 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private loadCompanyData(company: CompanyWithMarketData): void {
+  private loadCompanyData(company: CompanyWithMarketData | GroupedCompanyOccurrence): void {
     this.companyId = company.id;
     this.companyName = company.name;
     this.tickerSymbol = company.ticker_symbol;
-    this.currentPrice = this.formatPrice(company.market_data?.current_price);
-    this.percentageChange = this.formatChange(company.market_data?.percentage_change);
-    this.changeClass = this.getChangeClass(company.market_data?.percentage_change);
+    const currentPrice =
+      'market_data' in company
+        ? company.market_data?.current_price
+        : (company as GroupedCompanyOccurrence).latestPrice;
+    const percentChange =
+      'market_data' in company
+        ? company.market_data?.percentage_change
+        : (company as GroupedCompanyOccurrence).averageChange;
+    this.currentPrice = this.formatPrice(currentPrice);
+    this.percentageChange = this.formatChange(percentChange);
+    this.changeClass = this.getChangeClass(percentChange);
     this.occurrenceCount = this.occurrenceCounts.get(company.ticker_symbol) || 0;
     this.categoryValue = company.category?.name || '';
     this.commentText = company.comments || '';

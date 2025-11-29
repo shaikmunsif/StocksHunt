@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import { DialogService } from '../dialog/dialog.service';
 import { CommentModalComponent } from '../comment-modal/comment-modal.component';
 import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-modal.component';
 import { ShimmerLoaderComponent } from '../shimmer-loader/shimmer-loader.component';
+import { CompanyStore } from '../../stores/company.store';
 
 @Component({
   selector: 'app-gainers-view-date',
@@ -18,7 +19,7 @@ import { ShimmerLoaderComponent } from '../shimmer-loader/shimmer-loader.compone
   templateUrl: './gainers-view-date.html',
   styleUrls: ['./gainers-view-date.scss'],
 })
-export class GainersViewDateComponent implements OnInit {
+export class GainersViewDateComponent implements OnInit, OnDestroy {
   marketData: MarketDataResponse | null = null;
   isLoading = false;
   loadingProgress = 0;
@@ -33,9 +34,12 @@ export class GainersViewDateComponent implements OnInit {
   // Occurrence tracking
   occurrenceCounts: Map<string, number> = new Map();
 
-  // Sorting properties
+  // Sorting properties (default restored per review)
   sortColumn: string = 'ticker_symbol';
   sortDirection: 'asc' | 'desc' = 'asc';
+
+  private progressInterval?: number;
+  private currentRequestId = 0;
 
   constructor(
     private databaseService: DatabaseService,
@@ -43,6 +47,8 @@ export class GainersViewDateComponent implements OnInit {
     private dialogService: DialogService,
     public breakpointService: BreakpointService
   ) {}
+
+  private readonly companyStore = inject(CompanyStore);
 
   ngOnInit(): void {
     this.initializeDefaults();
@@ -86,34 +92,81 @@ export class GainersViewDateComponent implements OnInit {
     this.error = null;
 
     try {
-      this.loadingProgress = 30;
-      const data = await this.databaseService.getMarketDataByDate(this.selectedDate);
+      const requestId = ++this.currentRequestId;
+      // Step 1: Fetch market data (0-20%) with simulated incremental progress
+      this.loadingProgress = 5;
 
-      this.loadingProgress = 60;
-      // Filter by selected exchange
+      // Simulate realistic loading progress during API call
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+      }
+      this.progressInterval = window.setInterval(() => {
+        if (this.loadingProgress < 18) {
+          this.loadingProgress += 1;
+        }
+      }, 50); // Increment every 50ms
+
+      const data = await this.databaseService.getMarketDataByDate(this.selectedDate);
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+        this.progressInterval = undefined;
+      }
+      this.loadingProgress = 20;
+
+      // Step 2: Filter and process data (20-25%)
       if (data.companies) {
         data.companies = data.companies.filter(
           (company) => company.exchange?.code === this.selectedExchange
         );
+        this.loadingProgress = 22;
 
-        // Apply initial sorting
-        this.sortData(data.companies);
+        // Hydrate store with latest company shells
+        this.companyStore.upsertMany(
+          data.companies.map((c) => ({
+            id: c.id,
+            ticker_symbol: c.ticker_symbol,
+            comments: c.comments || '',
+            category: c.category ? { name: c.category.name } : null,
+          }))
+        );
+        this.loadingProgress = 25;
+      }
+
+      // If a newer request started, abort applying results
+      if (requestId !== this.currentRequestId) {
+        return;
       }
 
       this.marketData = data;
 
-      this.loadingProgress = 80;
-      // Load occurrence counts for all companies
+      // Step 3: Load occurrence counts with real-time progress (25-95%)
       if (data.companies) {
         await this.loadOccurrenceCounts(data.companies);
+      }
+
+      // Step 4: Apply sorting (95-100%)
+      this.loadingProgress = 95;
+
+      if (data.companies) {
+        this.sortData(data.companies);
       }
       this.loadingProgress = 100;
     } catch (error) {
       console.error('Error loading market data:', error);
       this.error = 'Failed to load market data. Please try again.';
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+        this.progressInterval = undefined;
+      }
     } finally {
       this.isLoading = false;
       this.loadingProgress = 0;
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
     }
   }
 
@@ -308,19 +361,31 @@ export class GainersViewDateComponent implements OnInit {
   async loadOccurrenceCounts(companies: CompanyWithMarketData[]): Promise<void> {
     this.occurrenceCounts.clear();
     const totalCompanies = companies.length;
+    const baseProgress = 25;
+    const progressRange = 70;
+    let completed = 0;
 
-    for (let i = 0; i < companies.length; i++) {
-      const company = companies[i];
-      const count = await this.databaseService.getCompanyOccurrenceCount(company.ticker_symbol);
-      this.occurrenceCounts.set(company.ticker_symbol, count);
-
-      // Update progress: 80% (base) + (20% * progress through companies)
-      this.loadingProgress = 80 + Math.round(((i + 1) / totalCompanies) * 20);
-    }
+    await Promise.all(
+      companies.map(async (company) => {
+        const count = await this.databaseService.getCompanyOccurrenceCount(company.ticker_symbol);
+        this.occurrenceCounts.set(company.ticker_symbol, count);
+        completed += 1;
+        this.loadingProgress =
+          baseProgress + Math.round((completed / totalCompanies) * progressRange);
+      })
+    );
   }
 
   getOccurrenceCount(company: CompanyWithMarketData): number {
     return this.occurrenceCounts.get(company.ticker_symbol) || 0;
+  }
+
+  /**
+   * Toggles the expanded state of a company's comment section.
+   * Using a method ensures proper change detection.
+   */
+  toggleExpanded(company: CompanyWithMarketData): void {
+    company.expanded = !company.expanded;
   }
 
   addComment(company: CompanyWithMarketData): void {
@@ -329,7 +394,25 @@ export class GainersViewDateComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
+        const list = this.marketData?.companies;
+        if (!list) return;
+        const idx = list.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          const updated = {
+            ...list[idx],
+            comments: update.comments?.trim() || '',
+          } as CompanyWithMarketData;
+          this.marketData = {
+            ...this.marketData!,
+            companies: [...list.slice(0, idx), updated, ...list.slice(idx + 1)],
+          };
+        }
+
+        this.companyStore.updateComment(update.companyId, update.comments ?? '');
+      },
     });
   }
 
@@ -339,7 +422,25 @@ export class GainersViewDateComponent implements OnInit {
       companyName: company.name,
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
+        const list = this.marketData?.companies;
+        if (!list) return;
+        const idx = list.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          const updated = {
+            ...list[idx],
+            comments: update.comments?.trim() || '',
+          } as CompanyWithMarketData;
+          this.marketData = {
+            ...this.marketData!,
+            companies: [...list.slice(0, idx), updated, ...list.slice(idx + 1)],
+          };
+        }
+
+        this.companyStore.updateComment(update.companyId, update.comments ?? '');
+      },
     });
   }
 
@@ -354,7 +455,38 @@ export class GainersViewDateComponent implements OnInit {
       occurrenceCount: this.getOccurrenceCount(company),
       category: company.category?.name || '',
       comment: company.comments || '',
-      onSave: () => this.loadMarketData(),
+      onSave: (update: {
+        companyId: string;
+        tickerSymbol: string;
+        categoryName: string | null;
+        comments: string;
+      }) => {
+        const list = this.marketData?.companies;
+        if (!list) return;
+        const idx = list.findIndex(
+          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+        );
+        if (idx >= 0) {
+          const current = list[idx];
+          const updated: CompanyWithMarketData = {
+            ...current,
+            comments: update.comments?.trim() || '',
+            category:
+              update.categoryName !== null
+                ? current.category
+                  ? { ...current.category, name: update.categoryName }
+                  : undefined
+                : undefined,
+          };
+          this.marketData = {
+            ...this.marketData!,
+            companies: [...list.slice(0, idx), updated, ...list.slice(idx + 1)],
+          };
+        }
+
+        this.companyStore.updateComment(update.companyId, update.comments ?? '');
+        this.companyStore.updateCategory(update.companyId, update.categoryName);
+      },
       companiesList: this.marketData?.companies || [],
       currentIndex: index,
       occurrenceCounts: this.occurrenceCounts,

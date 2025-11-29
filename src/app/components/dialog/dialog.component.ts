@@ -6,8 +6,11 @@ import {
   ViewContainerRef,
   inject,
   signal,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LayoutService } from '../../services/layout.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dialog',
@@ -17,6 +20,8 @@ import { CommonModule } from '@angular/common';
     @if (isOpen()) {
     <div
       class="fixed inset-0 z-50 overflow-y-auto mobile-dialog-wrapper"
+      [class.dialog-with-sidebar]="isAuthenticated()"
+      [class.dialog-sidebar-collapsed]="isAuthenticated() && isSidebarCollapsed()"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
@@ -92,6 +97,22 @@ import { CommonModule } from '@angular/common';
         }
       }
 
+      /* Desktop: Adjust dialog position when sidebar is present */
+      @media (min-width: 1024px) {
+        .dialog-with-sidebar {
+          left: 260px;
+          right: 0;
+          width: calc(100% - 260px);
+          transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dialog-with-sidebar.dialog-sidebar-collapsed {
+          left: 70px;
+          width: calc(100% - 70px);
+        }
+      }
+
       .mobile-dialog-content {
         @media (max-width: 639px) {
           position: fixed;
@@ -126,6 +147,12 @@ export class DialogComponent {
 
   readonly isOpen = signal(false);
   private componentRef?: ComponentRef<any>;
+
+  private readonly layoutService = inject(LayoutService);
+  private readonly authService = inject(AuthService);
+
+  readonly isSidebarCollapsed = computed(() => this.layoutService.isSidebarCollapsed());
+  readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
 
   open<T>(component: Type<T>, data?: any): ComponentRef<T> {
     this.isOpen.set(true);
