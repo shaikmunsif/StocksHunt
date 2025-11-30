@@ -209,8 +209,8 @@
               <span class="mobile-card-label">Avg Change:</span>
               <span
                 class="mobile-card-value"
-                [class.text-green-600]="(company.averageChange ?? 0) >= 0"
-                [class.text-red-600]="(company.averageChange ?? 0) < 0"
+                [class.text-green-600]="company.averageChange >= 0"
+                [class.text-red-600]="company.averageChange < 0"
                 [class.font-semibold]="true"
               >
                 {{ formatChange(company.averageChange) }}
