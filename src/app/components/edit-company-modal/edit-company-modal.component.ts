@@ -594,7 +594,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   formatChange(change?: number): string {
-    return formatUtils.formatChange(change);
+    return formatUtils.formatChangeWithSign(change);
   }
 
   getChangeClass(change?: number): string {
