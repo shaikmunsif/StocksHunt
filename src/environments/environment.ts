@@ -1,5 +1,5 @@
 export const environment = {
-  production: true,
-  supabaseUrl: '',
-  supabaseKey: '',
+	production: true,
+	supabaseUrl: 'https://placeholder.supabase.co',
+	supabaseKey: 'placeholder_key'
 };
