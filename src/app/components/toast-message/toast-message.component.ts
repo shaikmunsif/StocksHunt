@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { IconsComponent } from '../svg';
 
 export interface ToastMessage {
@@ -8,10 +8,9 @@ export interface ToastMessage {
 
 @Component({
   selector: 'app-toast-message',
-  standalone: true,
   imports: [IconsComponent],
   template: `
-    @if (message) {
+    @if (message()) {
     <div
       class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-slide-up"
       role="alert"
@@ -20,23 +19,23 @@ export interface ToastMessage {
     >
       <div
         class="rounded-lg p-4 shadow-lg border-2"
-        [class.bg-green-50]="message.type === 'success'"
-        [class.border-green-400]="message.type === 'success'"
-        [class.bg-red-50]="message.type === 'error'"
-        [class.border-red-400]="message.type === 'error'"
-        [class.dark:bg-green-900]="message.type === 'success'"
-        [class.dark:border-green-600]="message.type === 'success'"
-        [class.dark:bg-red-900]="message.type === 'error'"
-        [class.dark:border-red-600]="message.type === 'error'"
+        [class.bg-green-50]="message()!.type === 'success'"
+        [class.border-green-400]="message()!.type === 'success'"
+        [class.bg-red-50]="message()!.type === 'error'"
+        [class.border-red-400]="message()!.type === 'error'"
+        [class.dark:bg-green-900]="message()!.type === 'success'"
+        [class.dark:border-green-600]="message()!.type === 'success'"
+        [class.dark:bg-red-900]="message()!.type === 'error'"
+        [class.dark:border-red-600]="message()!.type === 'error'"
       >
         <div class="flex items-center">
           <div class="flex-shrink-0">
             <app-icon
-              [iconName]="message.type === 'success' ? 'success' : 'error-circle'"
+              [iconName]="message()!.type === 'success' ? 'success' : 'error-circle'"
               width="24"
               height="24"
               [className]="
-                message.type === 'success'
+                message()!.type === 'success'
                   ? 'text-green-500 dark:text-green-400'
                   : 'text-red-500 dark:text-red-400'
               "
@@ -45,12 +44,12 @@ export interface ToastMessage {
           <div class="ml-3 flex-1">
             <p
               class="text-sm font-semibold"
-              [class.text-green-800]="message.type === 'success'"
-              [class.text-red-800]="message.type === 'error'"
-              [class.dark:text-green-100]="message.type === 'success'"
-              [class.dark:text-red-100]="message.type === 'error'"
+              [class.text-green-800]="message()!.type === 'success'"
+              [class.text-red-800]="message()!.type === 'error'"
+              [class.dark:text-green-100]="message()!.type === 'success'"
+              [class.dark:text-red-100]="message()!.type === 'error'"
             >
-              {{ message.message }}
+              {{ message()!.message }}
             </p>
           </div>
         </div>
@@ -60,5 +59,5 @@ export interface ToastMessage {
   `,
 })
 export class ToastMessageComponent {
-  @Input() message: ToastMessage | null = null;
+  readonly message = input<ToastMessage | null>(null);
 }

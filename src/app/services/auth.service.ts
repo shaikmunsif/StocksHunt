@@ -29,7 +29,6 @@ export class AuthService implements OnDestroy {
 
     // Listen for auth state changes
     this.supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
       this.updateUserState(session?.user || null);
       this.authStateSubject.next(session?.user || null);
     });
@@ -50,7 +49,6 @@ export class AuthService implements OnDestroy {
         return;
       }
       if (session?.user) {
-        console.log('Found existing session for:', session.user.email);
         this.updateUserState(session.user);
         this.authStateSubject.next(session.user);
       }

@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -7,10 +6,8 @@ import { IconsComponent } from '../svg/icons';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, IconsComponent],
+  imports: [ReactiveFormsModule, RouterModule, IconsComponent],
   templateUrl: './login.html',
-  styleUrls: ['./login.scss'],
 })
 export class LoginComponent {
   fb = inject(FormBuilder);
@@ -37,7 +34,6 @@ export class LoginComponent {
     this.needsEmailConfirmation.set(false);
 
     const formData = this.loginForm.value;
-    console.log(formData);
 
     this.authService.login(formData.email!, formData.password!).subscribe((result) => {
       this.isLoading.set(false);

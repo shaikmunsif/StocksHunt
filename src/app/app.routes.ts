@@ -1,13 +1,13 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from './guards/auth.guard';
-import { DashboardGuard } from './guards/dashboard.guard';
+import { authGuard } from './guards/auth.guard';
+import { dashboardGuard } from './guards/dashboard.guard';
 
 export const routes: Routes = [
   {
     path: 'manage-data',
     loadComponent: () =>
       import('./components/stock-gainers/stock-gainers').then((m) => m.StockGainersComponent),
-    canActivate: [DashboardGuard],
+    canActivate: [dashboardGuard],
   },
   {
     path: 'analysis/date-wise',
@@ -15,7 +15,7 @@ export const routes: Routes = [
       import('./components/gainers-view-date/gainers-view-date').then(
         (m) => m.GainersViewDateComponent
       ),
-    canActivate: [DashboardGuard],
+    canActivate: [dashboardGuard],
   },
   {
     path: 'analysis/threshold',
@@ -23,17 +23,17 @@ export const routes: Routes = [
       import('./components/gainers-view-threshold/gainers-view-threshold').then(
         (m) => m.GainersViewThresholdComponent
       ),
-    canActivate: [DashboardGuard],
+    canActivate: [dashboardGuard],
   },
   {
     path: 'register',
     loadComponent: () => import('./components/register/register').then((m) => m.RegisterComponent),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'login',
     loadComponent: () => import('./components/login/login').then((m) => m.LoginComponent),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' },

@@ -8,9 +8,9 @@ import {
   ElementRef,
   AfterViewInit,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
+import * as formatUtils from '../../utils/format.utils';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
 import {
@@ -24,8 +24,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
 
 @Component({
   selector: 'app-edit-company-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ToastMessageComponent],
+  imports: [FormsModule, ToastMessageComponent],
   template: `
     <div
       class="max-h-[85vh] overflow-y-auto"
@@ -359,7 +358,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
     </div>
   `,
 })
-export class EditCompanyModalComponent implements OnInit, AfterViewInit {
+export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('priceChart') priceChartRef!: ElementRef<HTMLCanvasElement>;
 
   // Inputs
@@ -591,18 +590,15 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit {
   }
 
   formatPrice(price?: number): string {
-    if (price === undefined || price === null) return 'N/A';
-    return '₹' + price.toFixed(2);
+    return formatUtils.formatPriceSimple(price);
   }
 
   formatChange(change?: number): string {
-    if (change === undefined || change === null) return 'N/A';
-    return (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+    return formatUtils.formatChangeWithSign(change);
   }
 
   getChangeClass(change?: number): string {
-    if (change === undefined || change === null) return 'text-gray-500';
-    return change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+    return formatUtils.getChangeClass(change);
   }
 
   async save() {

@@ -1,16 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService } from '../../services/auth.service';
 import { LayoutService } from '../../services/layout.service';
-import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-sidebar',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.scss'],
   host: {
@@ -29,6 +26,10 @@ import { filter, Subscription } from 'rxjs';
   ],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
+  private readonly authService = inject(AuthService);
+  private readonly layoutService = inject(LayoutService);
+  private readonly router = inject(Router);
+
   isMobileMenuOpen = false;
   private touchStartX = 0;
   private touchStartY = 0;
@@ -53,12 +54,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       isActive: false,
     },
   ];
-
-  constructor(
-    public authService: AuthService,
-    public layoutService: LayoutService,
-    private router: Router
-  ) {}
 
   get currentUser(): { email: string; username: string } | null {
     return this.authService.currentUser();
@@ -123,7 +118,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     });
   }
 
-  getMenuItemsForUserType(): any[] {
+  getMenuItemsForUserType(): typeof this.menuItems {
     return this.menuItems;
   }
 

@@ -248,22 +248,24 @@ SUPABASE_KEY=your_anon_key
 
 ## 📝 Best Practices Implemented
 
-- ✅ Standalone components (no NgModules)
+- ✅ Standalone components (default in Angular 20+)
 - ✅ Angular Signals for reactive state
-- ✅ Host bindings instead of decorators
-- ✅ Direct class bindings over `[ngClass]`
+- ✅ Signal inputs (`input()` function)
+- ✅ Functional guards (`CanActivateFn`)
+- ✅ `inject()` function for dependency injection
 - ✅ Modern control flow (`@if`, `@for`, `@switch`)
-- ✅ Type-only imports for tree-shaking
+- ✅ Granular imports (no `CommonModule`)
 - ✅ Lazy loading with `loadComponent()`
-- ✅ Dynamic imports for heavy libraries
-- ✅ TypeScript strict mode
+- ✅ Dynamic imports for heavy libraries (Chart.js)
+- ✅ TypeScript strict mode with no `any` types
 - ✅ Mobile-first responsive design
+- ✅ Shared utilities for DRY code
+- ✅ Proper memory leak prevention (`DestroyRef`)
 
 ## 📚 Documentation
 
 - [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) - Comprehensive project documentation
-- [MOBILE_COMPLETION_SUMMARY.md](./MOBILE_COMPLETION_SUMMARY.md) - Mobile implementation details
-- [ENHANCED_FEATURES_SUMMARY.md](./ENHANCED_FEATURES_SUMMARY.md) - Feature enhancements
+- [docs/archive/](./docs/archive/) - Historical documentation and changelogs
 
 ## 🔗 Resources
 

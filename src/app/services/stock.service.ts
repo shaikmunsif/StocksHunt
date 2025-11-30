@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { DatabaseService } from './database.service';
 import {
   StockData,
@@ -11,7 +11,7 @@ import {
   providedIn: 'root',
 })
 export class StockService {
-  constructor(private databaseService: DatabaseService) {}
+  private readonly databaseService = inject(DatabaseService);
 
   // Legacy method for backward compatibility
   parseTableData(tableInput: string, dateInput: string): StockGainersResponse {
@@ -141,7 +141,12 @@ export class StockService {
         return false;
       }
 
-      return await this.databaseService.saveMarketData(parsedData, date, exchangeCode, progressCallback);
+      return await this.databaseService.saveMarketData(
+        parsedData,
+        date,
+        exchangeCode,
+        progressCallback
+      );
     } catch (error) {
       console.error('Error saving to database:', error);
       return false;

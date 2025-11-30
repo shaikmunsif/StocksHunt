@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../../services/stock.service';
 import { DatabaseService } from '../../services/database.service';
@@ -12,8 +12,7 @@ import {
 
 @Component({
   selector: 'app-stock-gainers',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, DatePipe],
   templateUrl: './stock-gainers.html',
   styleUrl: './stock-gainers.scss',
 })

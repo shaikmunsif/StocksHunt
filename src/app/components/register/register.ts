@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -7,10 +6,8 @@ import { IconsComponent } from '../svg/icons';
 
 @Component({
   selector: 'app-register',
-  standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, IconsComponent],
+  imports: [RouterModule, ReactiveFormsModule, IconsComponent],
   templateUrl: './register.html',
-  styleUrls: ['./register.scss'],
 })
 export class RegisterComponent {
   fb = inject(FormBuilder);
@@ -37,7 +34,6 @@ export class RegisterComponent {
     this.errorMessage.set(null);
 
     const formData = this.registrationForm.value;
-    console.log(formData);
 
     this.authService
       .register(formData.email!, formData.username!, formData.password!)
@@ -57,8 +53,7 @@ export class RegisterComponent {
   resendConfirmationEmail() {
     this.authService.resendConfirmationEmail().subscribe((success) => {
       if (success) {
-        // Show success message or update UI
-        console.log('Confirmation email resent successfully');
+        // Successfully resent - UI already shows success state
       }
     });
   }

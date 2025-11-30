@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AuthService } from './auth.service';
 import {
   Exchange,
@@ -14,7 +14,7 @@ import {
   providedIn: 'root',
 })
 export class DatabaseService {
-  constructor(private authService: AuthService) {}
+  private readonly authService = inject(AuthService);
 
   // Exchange operations
   async getExchanges(): Promise<Exchange[]> {
@@ -93,7 +93,6 @@ export class DatabaseService {
       }
 
       // If not found, create it
-      console.log(`Category '${categoryName}' not found, creating it...`);
       const { data: newCategory, error: createError } = await this.authService.supabase
         .from('categories')
         .insert([{ name: categoryName }])
@@ -109,7 +108,6 @@ export class DatabaseService {
         throw new Error('Failed to create category: No data returned');
       }
 
-      console.log(`Successfully created category '${categoryName}' with ID: ${newCategory.id}`);
       return newCategory;
     } catch (error) {
       console.error('Error getting or creating category:', error);
