@@ -211,8 +211,8 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         comparison = aValue.localeCompare(bValue);
       } else {
-        const numA = typeof aValue === 'number' ? aValue : 0;
-        const numB = typeof bValue === 'number' ? bValue : 0;
+        const numA = Number.isFinite(aValue) ? (aValue as number) : 0;
+        const numB = Number.isFinite(bValue) ? (bValue as number) : 0;
         comparison = numA - numB;
       }
 
