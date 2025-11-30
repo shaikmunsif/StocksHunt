@@ -41,9 +41,9 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   // Occurrence tracking
   occurrenceCounts: Map<string, number> = new Map();
 
-  // Sorting properties (default restored per review)
-  sortColumn: string = 'ticker_symbol';
-  sortDirection: 'asc' | 'desc' = 'asc';
+  // Sorting properties - default to occurrence_count descending
+  sortColumn: string = 'occurrence_count';
+  sortDirection: 'asc' | 'desc' = 'desc';
 
   private progressInterval?: number;
   private currentRequestId = 0;
@@ -207,15 +207,27 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
           bValue = b.ticker_symbol;
       }
 
+      let comparison: number;
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return this.sortDirection === 'asc'
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+        comparison = aValue.localeCompare(bValue);
       } else {
         const numA = Number.isFinite(aValue) ? (aValue as number) : 0;
         const numB = Number.isFinite(bValue) ? (bValue as number) : 0;
-        return this.sortDirection === 'asc' ? numA - numB : numB - numA;
+        comparison = numA - numB;
       }
+
+      // Apply sort direction
+      comparison = this.sortDirection === 'asc' ? comparison : -comparison;
+
+      // If values are equal and we're sorting by occurrence_count, use percentage_change as tiebreaker
+      if (comparison === 0 && this.sortColumn === 'occurrence_count') {
+        const aChange = a.market_data?.percentage_change || 0;
+        const bChange = b.market_data?.percentage_change || 0;
+        // Tiebreaker: higher percentage change comes first (descending)
+        return bChange - aChange;
+      }
+
+      return comparison;
     });
   }
 
@@ -224,11 +236,31 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortColumn = column;
-      this.sortDirection = 'asc';
+      this.sortDirection = this.getDefaultSortDirection(column);
     }
 
     if (this.marketData?.companies) {
       this.sortData(this.marketData.companies);
+    }
+  }
+
+  /**
+   * Returns the default sort direction for a column based on user expectations.
+   * Numeric columns default to descending (highest first), text columns to ascending (A-Z).
+   */
+  private getDefaultSortDirection(column: string): 'asc' | 'desc' {
+    switch (column) {
+      case 'ticker_symbol':
+      case 'name':
+      case 'category':
+        return 'asc'; // Alphabetical columns: A-Z first
+      case 'current_price':
+      case 'previous_close':
+      case 'percentage_change':
+      case 'occurrence_count':
+        return 'desc'; // Numeric columns: highest first
+      default:
+        return 'asc';
     }
   }
 
