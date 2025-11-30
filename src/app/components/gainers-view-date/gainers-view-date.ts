@@ -193,10 +193,21 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
           aValue = a.category?.name || '';
           bValue = b.category?.name || '';
           break;
-        case 'occurrence_count':
-          aValue = this.getOccurrenceCount(a);
-          bValue = this.getOccurrenceCount(b);
-          break;
+        case 'occurrence_count': {
+          const aOccurrence = this.getOccurrenceCount(a);
+          const bOccurrence = this.getOccurrenceCount(b);
+          const occurrenceComparison =
+            this.sortDirection === 'asc'
+              ? aOccurrence - bOccurrence
+              : bOccurrence - aOccurrence;
+          if (occurrenceComparison !== 0) {
+            return occurrenceComparison;
+          }
+          // Secondary sort by percentage change (descending) when occurrences are equal
+          const aPercent = a.market_data?.percentage_change ?? 0;
+          const bPercent = b.market_data?.percentage_change ?? 0;
+          return bPercent - aPercent;
+        }
         default:
           aValue = a.ticker_symbol;
           bValue = b.ticker_symbol;
