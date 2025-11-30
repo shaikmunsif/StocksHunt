@@ -140,7 +140,7 @@
           </svg>
         </div>
         <div class="user-details">
-          <p class="user-name">{{ authService.currentUser()?.username || 'User' }}</p>
+          <p class="user-name">{{ currentUser.username || 'User' }}</p>
           <p class="user-role">Administrator</p>
         </div>
         <button (click)="logout()" class="logout-btn" title="Logout">

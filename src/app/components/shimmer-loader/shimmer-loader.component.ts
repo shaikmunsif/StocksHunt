@@ -2,7 +2,6 @@ import { Component, computed, input } from '@angular/core';
 
 @Component({
   selector: 'app-shimmer-loader',
-  standalone: true,
   imports: [],
   templateUrl: './shimmer-loader.component.html',
   styleUrl: './shimmer-loader.component.scss',

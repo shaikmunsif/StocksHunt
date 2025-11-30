@@ -102,7 +102,9 @@
             [disabled]="exchangeMode !== 'one'"
             class="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm disabled:bg-slate-100 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-500"
           >
-            <option *ngFor="let exchange of exchanges" [value]="exchange">{{ exchange }}</option>
+            @for (exchange of exchanges; track exchange) {
+            <option [value]="exchange">{{ exchange }}</option>
+            }
           </select>
           <p class="text-xs text-gray-500 dark:text-gray-400">
             Choose an exchange when "Specific Exchange" is enabled.
@@ -150,17 +152,18 @@
     }
 
     <!-- Error state -->
+    @if (error && !isLoading) {
     <div
-      *ngIf="error && !isLoading"
       class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
     >
       <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
       <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
     </div>
+    }
 
     <!-- Results table -->
+    @if (!isLoading && !error) {
     <div
-      *ngIf="!isLoading && !error"
       class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
     >
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -173,132 +176,128 @@
 
       <!-- Mobile Card View -->
       <div class="mobile-card-view">
-        <ng-container *ngIf="repeatedCompanies.length; else mobileEmptyState">
-          <div
-            *ngFor="let company of repeatedCompanies; let i = index; trackBy: trackByCompany"
-            class="mobile-card"
-          >
-            <div class="mobile-card-header">
-              <div class="mobile-card-title">
-                <a
-                  class="text-blue-600 dark:text-blue-400 font-semibold text-base"
-                  [href]="'https://www.screener.in/company/' + company.ticker_symbol"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {{ company.ticker_symbol }}
-                </a>
-                <span
-                  class="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                >
-                  {{ company.occurrenceCount || 0 }}
-                </span>
-              </div>
-              <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                {{ company.name || 'N/A' }}
-              </p>
-            </div>
-
-            <div class="mobile-card-body">
-              <div class="mobile-card-row">
-                <span class="mobile-card-label">Latest Price:</span>
-                <span class="mobile-card-value">{{ formatPrice(company.latestPrice) }}</span>
-              </div>
-              <div class="mobile-card-row">
-                <span class="mobile-card-label">Avg Change:</span>
-                <span
-                  class="mobile-card-value"
-                  [class.text-green-600]="company.averageChange >= 0"
-                  [class.text-red-600]="company.averageChange < 0"
-                  [class.font-semibold]="true"
-                >
-                  {{ formatChange(company.averageChange) }}
-                </span>
-              </div>
-              <div class="mobile-card-row">
-                <span class="mobile-card-label">Category:</span>
-                <span
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                >
-                  {{ company.category?.name || 'N/A' }}
-                </span>
-              </div>
-              @if (company.comments) {
-              <div class="mobile-card-row-full">
-                <span class="mobile-card-label">Comments:</span>
-                <span class="text-sm text-gray-700 dark:text-gray-300">{{ company.comments }}</span>
-              </div>
-              }
-            </div>
-
-            <div class="mobile-card-actions">
-              <button
-                (click)="editRow(company, i)"
-                class="mobile-action-btn mobile-action-btn-primary"
+        @if (repeatedCompanies.length) { @for (company of repeatedCompanies; track company.id; let i
+        = $index) {
+        <div class="mobile-card">
+          <div class="mobile-card-header">
+            <div class="mobile-card-title">
+              <a
+                class="text-blue-600 dark:text-blue-400 font-semibold text-base"
+                [href]="'https://www.screener.in/company/' + company.ticker_symbol"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                <span>Edit Details</span>
-              </button>
-              @if (company.comments) {
-              <button
-                (click)="editComment(company)"
-                class="mobile-action-btn mobile-action-btn-secondary"
+                {{ company.ticker_symbol }}
+              </a>
+              <span
+                class="px-2 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                <span>Edit Comment</span>
-              </button>
-              } @else {
-              <button
-                (click)="addComment(company)"
-                class="mobile-action-btn mobile-action-btn-secondary"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                <span>Add Comment</span>
-              </button>
-              }
+                {{ company.occurrenceCount || 0 }}
+              </span>
             </div>
-          </div>
-        </ng-container>
-
-        <ng-template #mobileEmptyState>
-          <div class="mobile-empty-state">
-            <svg class="mobile-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"
-              ></path>
-            </svg>
-            <h3 class="mt-2 text-base font-medium text-gray-900 dark:text-white">
-              No repeated companies found
-            </h3>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Try lowering the threshold value to broaden the results.
+            <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
+              {{ company.name || 'N/A' }}
             </p>
           </div>
-        </ng-template>
+
+          <div class="mobile-card-body">
+            <div class="mobile-card-row">
+              <span class="mobile-card-label">Latest Price:</span>
+              <span class="mobile-card-value">{{ formatPrice(company.latestPrice) }}</span>
+            </div>
+            <div class="mobile-card-row">
+              <span class="mobile-card-label">Avg Change:</span>
+              <span
+                class="mobile-card-value"
+                [class.text-green-600]="company.averageChange >= 0"
+                [class.text-red-600]="company.averageChange < 0"
+                [class.font-semibold]="true"
+              >
+                {{ formatChange(company.averageChange) }}
+              </span>
+            </div>
+            <div class="mobile-card-row">
+              <span class="mobile-card-label">Category:</span>
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+              >
+                {{ company.category?.name || 'N/A' }}
+              </span>
+            </div>
+            @if (company.comments) {
+            <div class="mobile-card-row-full">
+              <span class="mobile-card-label">Comments:</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">{{ company.comments }}</span>
+            </div>
+            }
+          </div>
+
+          <div class="mobile-card-actions">
+            <button
+              (click)="editRow(company, i)"
+              class="mobile-action-btn mobile-action-btn-primary"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              <span>Edit Details</span>
+            </button>
+            @if (company.comments) {
+            <button
+              (click)="editComment(company)"
+              class="mobile-action-btn mobile-action-btn-secondary"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              <span>Edit Comment</span>
+            </button>
+            } @else {
+            <button
+              (click)="addComment(company)"
+              class="mobile-action-btn mobile-action-btn-secondary"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span>Add Comment</span>
+            </button>
+            }
+          </div>
+        </div>
+        } } @else {
+        <div class="mobile-empty-state">
+          <svg class="mobile-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"
+            ></path>
+          </svg>
+          <h3 class="mt-2 text-base font-medium text-gray-900 dark:text-white">
+            No repeated companies found
+          </h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Try lowering the threshold value to broaden the results.
+          </p>
+        </div>
+        }
       </div>
 
       <!-- Desktop Table View -->
@@ -397,108 +396,73 @@
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            <ng-container *ngIf="repeatedCompanies.length; else emptyState">
-              <tr
-                *ngFor="let company of repeatedCompanies; let i = index; trackBy: trackByCompany"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
-              >
-                <td class="table-cell-text">
-                  <a
-                    class="text-blue-600 hover:underline dark:text-blue-400"
-                    [href]="'https://www.screener.in/company/' + company.ticker_symbol"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {{ company.ticker_symbol }}
-                  </a>
-                </td>
-                <td class="table-cell-text">{{ company.name || 'N/A' }}</td>
-                <td class="table-cell-text">{{ formatPrice(company.latestPrice) }}</td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm"
-                  [class.text-green-600]="company.averageChange >= 0"
-                  [class.text-red-600]="company.averageChange < 0"
-                  [class.font-semibold]="true"
+            @if (repeatedCompanies.length) { @for (company of repeatedCompanies; track company.id;
+            let i = $index) {
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+              <td class="table-cell-text">
+                <a
+                  class="text-blue-600 hover:underline dark:text-blue-400"
+                  [href]="'https://www.screener.in/company/' + company.ticker_symbol"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {{ formatChange(company.averageChange) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                  <span
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                  >
-                    {{ company.category?.name || 'N/A' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                  <span
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  >
-                    {{ company.occurrenceCount || 0 }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm">
-                  @if (company.comments) {
-                  <div class="flex items-start gap-2 max-w-md">
-                    <div class="flex-1 min-w-0">
-                      <p
-                        class="text-gray-700 dark:text-gray-300 break-words"
-                        [class.line-clamp-2]="!company.expanded"
-                        [title]="company.comments"
-                        [attr.id]="'comment-' + company.ticker_symbol"
-                      >
-                        {{ company.comments }}
-                      </p>
-                      @if (company.comments.length > 100) {
-                      <button
-                        (click)="toggleExpanded(company); $event.stopPropagation()"
-                        [attr.aria-expanded]="company.expanded"
-                        [attr.aria-controls]="'comment-' + company.ticker_symbol"
-                        aria-label="Toggle comment visibility"
-                        class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium mt-1"
-                      >
-                        {{ company.expanded ? 'Show less' : 'Show more' }}
-                      </button>
-                      }
-                    </div>
-                    <button
-                      (click)="editComment(company)"
-                      class="flex-shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-                      title="Edit comment"
+                  {{ company.ticker_symbol }}
+                </a>
+              </td>
+              <td class="table-cell-text">{{ company.name || 'N/A' }}</td>
+              <td class="table-cell-text">{{ formatPrice(company.latestPrice) }}</td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm"
+                [class.text-green-600]="company.averageChange >= 0"
+                [class.text-red-600]="company.averageChange < 0"
+                [class.font-semibold]="true"
+              >
+                {{ formatChange(company.averageChange) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                >
+                  {{ company.category?.name || 'N/A' }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                >
+                  {{ company.occurrenceCount || 0 }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm">
+                @if (company.comments) {
+                <div class="flex items-start gap-2 max-w-md">
+                  <div class="flex-1 min-w-0">
+                    <p
+                      class="text-gray-700 dark:text-gray-300 break-words"
+                      [class.line-clamp-2]="!company.expanded"
+                      [title]="company.comments"
+                      [attr.id]="'comment-' + company.ticker_symbol"
                     >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
+                      {{ company.comments }}
+                    </p>
+                    @if (company.comments.length > 100) {
+                    <button
+                      (click)="toggleExpanded(company); $event.stopPropagation()"
+                      [attr.aria-expanded]="company.expanded"
+                      [attr.aria-controls]="'comment-' + company.ticker_symbol"
+                      aria-label="Toggle comment visibility"
+                      class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium mt-1"
+                    >
+                      {{ company.expanded ? 'Show less' : 'Show more' }}
                     </button>
+                    }
                   </div>
-                  } @else {
                   <button
-                    (click)="addComment(company)"
-                    class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                    title="Add comment"
+                    (click)="editComment(company)"
+                    class="flex-shrink-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    title="Edit comment"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  </button>
-                  }
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    (click)="editRow(company, i)"
-                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                    title="Edit company details"
-                  >
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -506,40 +470,73 @@
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                       />
                     </svg>
-                    Edit
                   </button>
-                </td>
-              </tr>
-            </ng-container>
-            <ng-template #emptyState>
-              <tr>
-                <td colspan="8" class="px-6 py-12 text-center">
-                  <svg
-                    class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                </div>
+                } @else {
+                <button
+                  (click)="addComment(company)"
+                  class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  title="Add comment"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"
-                    ></path>
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
-                  <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-                    No repeated companies found
-                  </h3>
-                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Try lowering the threshold value to broaden the results.
-                  </p>
-                </td>
-              </tr>
-            </ng-template>
+                </button>
+                }
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <button
+                  (click)="editRow(company, i)"
+                  class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                  title="Edit company details"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit
+                </button>
+              </td>
+            </tr>
+            } } @else {
+            <tr>
+              <td colspan="8" class="px-6 py-12 text-center">
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"
+                  ></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                  No repeated companies found
+                </h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Try lowering the threshold value to broaden the results.
+                </p>
+              </td>
+            </tr>
+            }
           </tbody>
         </table>
       </div>
     </div>
+    }
   </div>
 </div>
 

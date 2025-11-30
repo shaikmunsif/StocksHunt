@@ -1,9 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
-import { AuthService } from '../../services/auth.service';
 import { BreakpointService } from '../../services/breakpoint.service';
 import { MarketDataResponse, CompanyWithMarketData } from '../../interfaces/stock-data.interface';
 import { DialogService } from '../dialog/dialog.service';
@@ -11,15 +9,24 @@ import { CommentModalComponent } from '../comment-modal/comment-modal.component'
 import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-modal.component';
 import { ShimmerLoaderComponent } from '../shimmer-loader/shimmer-loader.component';
 import { CompanyStore } from '../../stores/company.store';
+import {
+  formatPrice as formatPriceUtil,
+  formatChange as formatChangeUtil,
+  getChangeClass as getChangeClassUtil,
+} from '../../utils/format.utils';
 
 @Component({
   selector: 'app-gainers-view-date',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ShimmerLoaderComponent],
+  imports: [FormsModule, DatePipe, ShimmerLoaderComponent],
   templateUrl: './gainers-view-date.html',
   styleUrls: ['./gainers-view-date.scss'],
 })
 export class GainersViewDateComponent implements OnInit, OnDestroy {
+  private readonly databaseService = inject(DatabaseService);
+  private readonly dialogService = inject(DialogService);
+  readonly breakpointService = inject(BreakpointService);
+  private readonly companyStore = inject(CompanyStore);
+
   marketData: MarketDataResponse | null = null;
   isLoading = false;
   loadingProgress = 0;
@@ -40,15 +47,6 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
 
   private progressInterval?: number;
   private currentRequestId = 0;
-
-  constructor(
-    private databaseService: DatabaseService,
-    private authService: AuthService,
-    private dialogService: DialogService,
-    public breakpointService: BreakpointService
-  ) {}
-
-  private readonly companyStore = inject(CompanyStore);
 
   ngOnInit(): void {
     this.initializeDefaults();
@@ -172,8 +170,8 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
 
   sortData(companies: CompanyWithMarketData[]): void {
     companies.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (this.sortColumn) {
         case 'ticker_symbol':
@@ -214,9 +212,9 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       } else {
-        return this.sortDirection === 'asc'
-          ? (aValue || 0) - (bValue || 0)
-          : (bValue || 0) - (aValue || 0);
+        const numA = typeof aValue === 'number' ? aValue : 0;
+        const numB = typeof bValue === 'number' ? bValue : 0;
+        return this.sortDirection === 'asc' ? numA - numB : numB - numA;
       }
     });
   }
@@ -253,23 +251,15 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   }
 
   formatPrice(price?: number): string {
-    if (price === undefined || price === null) return 'N/A';
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
+    return formatPriceUtil(price);
   }
 
   formatChange(change?: number): string {
-    if (change === undefined || change === null) return 'N/A';
-    return `${change.toFixed(2)}%`;
+    return formatChangeUtil(change);
   }
 
   getChangeClass(change?: number): string {
-    if (change === undefined || change === null) return 'text-gray-500';
-    return change >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
+    return getChangeClassUtil(change);
   }
 
   getComment(company: CompanyWithMarketData): string {

@@ -1,4 +1,4 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal, effect, inject, DestroyRef } from '@angular/core';
 
 export enum Breakpoint {
   Mobile = 'mobile', // < 640px
@@ -10,6 +10,8 @@ export enum Breakpoint {
   providedIn: 'root',
 })
 export class BreakpointService {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly resizeHandler = this.handleResize.bind(this);
   private currentBreakpoint = signal<Breakpoint>(this.detectBreakpoint());
   readonly breakpoint = this.currentBreakpoint.asReadonly();
 
@@ -23,9 +25,13 @@ export class BreakpointService {
     // Initialize
     this.updateBreakpointSignals();
 
-    // Listen to window resize
+    // Listen to window resize with proper cleanup
     if (typeof window !== 'undefined') {
-      window.addEventListener('resize', this.handleResize.bind(this));
+      window.addEventListener('resize', this.resizeHandler);
+
+      this.destroyRef.onDestroy(() => {
+        window.removeEventListener('resize', this.resizeHandler);
+      });
     }
 
     // Update dependent signals when breakpoint changes

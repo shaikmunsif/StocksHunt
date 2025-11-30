@@ -240,8 +240,8 @@
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            @for (stock of stockData.stocks; track stock.symbol) {
             <tr
-              *ngFor="let stock of stockData.stocks; trackBy: trackByStock"
               class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
               [class.bg-green-100]="stock.changePercent > 10"
               [class.dark:bg-green-900/20]="stock.changePercent > 10"
@@ -283,6 +283,7 @@
                 ₹{{ formatPrice(stock.lastDayPrice) }}
               </td>
             </tr>
+            }
           </tbody>
         </table>
       </div>

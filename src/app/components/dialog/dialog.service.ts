@@ -20,13 +20,16 @@ import { AuthService } from '../../services/auth.service';
   providedIn: 'root',
 })
 export class DialogService {
-  private dialogComponentRef?: ComponentRef<DialogComponent>;
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private routerSubscription?: Subscription;
-  private destroyRef = inject(DestroyRef);
+  private readonly appRef = inject(ApplicationRef);
+  private readonly injector = inject(EnvironmentInjector);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  constructor(private appRef: ApplicationRef, private injector: EnvironmentInjector) {
+  private dialogComponentRef?: ComponentRef<DialogComponent>;
+  private routerSubscription?: Subscription;
+
+  constructor() {
     this.createDialogComponent();
     this.setupAuthListener();
     this.setupRouterListener();
@@ -71,7 +74,7 @@ export class DialogService {
     this.appRef.attachView(this.dialogComponentRef.hostView);
   }
 
-  open<T>(component: Type<T>, data?: any) {
+  open<T extends object>(component: Type<T>, data?: Partial<T>) {
     if (!this.dialogComponentRef) {
       this.createDialogComponent();
     }

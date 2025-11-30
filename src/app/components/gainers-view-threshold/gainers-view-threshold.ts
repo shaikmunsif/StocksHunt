@@ -1,6 +1,4 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
@@ -14,15 +12,23 @@ import { DialogService } from '../dialog/dialog.service';
 import { CommentModalComponent } from '../comment-modal/comment-modal.component';
 import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-modal.component';
 import { ShimmerLoaderComponent } from '../shimmer-loader/shimmer-loader.component';
+import {
+  formatPrice as formatPriceUtil,
+  formatChange as formatChangeUtil,
+  getChangeClass as getChangeClassUtil,
+} from '../../utils/format.utils';
 
 @Component({
   selector: 'app-gainers-view-threshold',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ShimmerLoaderComponent],
+  imports: [FormsModule, ShimmerLoaderComponent],
   templateUrl: './gainers-view-threshold.html',
   styleUrls: ['./gainers-view-threshold.scss'],
 })
 export class GainersViewThresholdComponent implements OnInit {
+  private readonly databaseService = inject(DatabaseService);
+  private readonly dialogService = inject(DialogService);
+  readonly breakpointService = inject(BreakpointService);
+
   isLoading = false;
   loadingProgress = 0;
   error: string | null = null;
@@ -43,12 +49,6 @@ export class GainersViewThresholdComponent implements OnInit {
     | 'category'
     | 'occurrence_count' = 'occurrence_count';
   sortDirection: 'asc' | 'desc' = 'desc';
-
-  constructor(
-    private readonly databaseService: DatabaseService,
-    private readonly dialogService: DialogService,
-    public breakpointService: BreakpointService
-  ) {}
 
   ngOnInit(): void {
     this.loadAvailableDates();
@@ -253,29 +253,15 @@ export class GainersViewThresholdComponent implements OnInit {
   }
 
   formatPrice(price?: number): string {
-    if (price === undefined || price === null) {
-      return 'N/A';
-    }
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
+    return formatPriceUtil(price);
   }
 
   formatChange(change?: number): string {
-    if (change === undefined || change === null) {
-      return 'N/A';
-    }
-    return `${change.toFixed(2)}%`;
+    return formatChangeUtil(change);
   }
 
   getChangeClass(change?: number): string {
-    if (change === undefined || change === null) {
-      return 'text-gray-500';
-    }
-    return change >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
+    return getChangeClassUtil(change);
   }
 
   getComment(company: GroupedCompanyOccurrence): string {

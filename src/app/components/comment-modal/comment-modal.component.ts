@@ -1,5 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
@@ -7,8 +6,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
 
 @Component({
   selector: 'app-comment-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ToastMessageComponent],
+  imports: [FormsModule, ToastMessageComponent],
   template: `
     <div class="sm:flex sm:items-start">
       <div

@@ -8,14 +8,12 @@ import {
   signal,
   computed,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { LayoutService } from '../../services/layout.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dialog',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     @if (isOpen()) {
     <div
@@ -146,7 +144,7 @@ export class DialogComponent {
   @ViewChild('contentHost', { read: ViewContainerRef }) contentHost!: ViewContainerRef;
 
   readonly isOpen = signal(false);
-  private componentRef?: ComponentRef<any>;
+  private componentRef?: ComponentRef<unknown>;
 
   private readonly layoutService = inject(LayoutService);
   private readonly authService = inject(AuthService);
@@ -154,7 +152,7 @@ export class DialogComponent {
   readonly isSidebarCollapsed = computed(() => this.layoutService.isSidebarCollapsed());
   readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
 
-  open<T>(component: Type<T>, data?: any): ComponentRef<T> {
+  open<T extends object>(component: Type<T>, data?: Partial<T>): ComponentRef<T> | undefined {
     this.isOpen.set(true);
 
     // Wait for view to update so contentHost is available
@@ -167,7 +165,7 @@ export class DialogComponent {
       }
     });
 
-    return this.componentRef as ComponentRef<T>;
+    return this.componentRef as ComponentRef<T> | undefined;
   }
 
   readonly close = () => {
