@@ -195,10 +195,29 @@ export class GainersViewThresholdComponent implements OnInit {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortColumn = column;
-      this.sortDirection = 'asc';
+      this.sortDirection = this.getDefaultSortDirection(column);
     }
 
     this.sortData(this.repeatedCompanies);
+  }
+
+  /**
+   * Returns the default sort direction for a column based on user expectations.
+   * Numeric columns default to descending (highest first), text columns to ascending (A-Z).
+   */
+  private getDefaultSortDirection(column: typeof this.sortColumn): 'asc' | 'desc' {
+    switch (column) {
+      case 'ticker_symbol':
+      case 'name':
+      case 'category':
+        return 'asc'; // Alphabetical columns: A-Z first
+      case 'current_price':
+      case 'average_change':
+      case 'occurrence_count':
+        return 'desc'; // Numeric columns: highest first
+      default:
+        return 'asc';
+    }
   }
 
   private sortData(companies: GroupedCompanyOccurrence[]): void {
