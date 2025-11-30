@@ -590,7 +590,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   formatPrice(price?: number): string {
-    return formatUtils.formatPrice(price);
+    return formatUtils.formatPriceSimple(price);
   }
 
   formatChange(change?: number): string {
