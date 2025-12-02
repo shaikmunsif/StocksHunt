@@ -36,9 +36,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private routerSubscription?: Subscription;
   menuItems = [
     {
-      title: 'Add Stock Data',
+      title: 'Stock Data Entry',
       icon: 'M12 4v16m8-8H4',
-      route: '/manage-data',
+      route: '/stock-data-entry',
       isActive: false,
     },
     {

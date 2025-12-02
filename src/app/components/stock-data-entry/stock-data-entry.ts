@@ -1,21 +1,21 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../../services/stock.service';
 import { StockGainersResponse } from '../../interfaces/stock-data.interface';
 
 @Component({
-  selector: 'app-stock-gainers',
+  selector: 'app-stock-data-entry',
   imports: [FormsModule, DatePipe],
-  templateUrl: './stock-gainers.html',
-  styleUrl: './stock-gainers.scss',
+  templateUrl: './stock-data-entry.html',
+  styleUrl: './stock-data-entry.scss',
 })
-export class StockGainersComponent implements OnInit {
+export class StockDataEntryComponent implements OnInit, OnDestroy {
   private stockService = inject(StockService);
 
   private readonly PROGRESS_DISPLAY_DELAY_MS = 500;
 
-  // Legacy properties for backward compatibility
+  // Stock data properties
   stockData: StockGainersResponse = { date: '', stocks: [] };
   dateInput: string = ''; // Will be set to today's date in ngOnInit
   tableInput: string = '';
@@ -29,7 +29,17 @@ export class StockGainersComponent implements OnInit {
   selectedExchange: string = 'NSE'; // Default to NSE
   exchanges: string[] = ['NSE', 'BSE']; // Available exchanges
 
-  // Legacy method for backward compatibility
+  // Mobile view state
+  expandedCards: { [key: string]: boolean } = {};
+  showScrollTop: boolean = false;
+
+  // Scroll listener for scroll-to-top button
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.showScrollTop = window.scrollY > 300;
+  }
+
+  // Parse and display data
   parseAndDisplayData(): void {
     if (!this.tableInput.trim()) {
       alert('Please paste table data');
@@ -39,9 +49,10 @@ export class StockGainersComponent implements OnInit {
     this.stockData = this.stockService.parseTableData(this.tableInput, this.dateInput);
     this.showData = true;
     this.saveMessage = '';
+    this.expandedCards = {}; // Reset expanded cards
   }
 
-  // New method to save to database structure
+  // Save to database
   async saveToDatabase(): Promise<void> {
     if (!this.tableInput.trim() || !this.dateInput) {
       alert('Please provide both table data and date');
@@ -92,6 +103,7 @@ export class StockGainersComponent implements OnInit {
     this.showData = false;
     this.saveMessage = '';
     this.selectedExchange = 'NSE'; // Reset to default exchange
+    this.expandedCards = {}; // Reset expanded cards
   }
 
   // Helper method to get today's date in YYYY-MM-DD format
@@ -111,8 +123,29 @@ export class StockGainersComponent implements OnInit {
     });
   }
 
+  // Mobile card expand/collapse
+  toggleCardExpand(symbol: string): void {
+    this.expandedCards[symbol] = !this.expandedCards[symbol];
+  }
+
+  // Remove stock from list (swipe-to-delete functionality)
+  removeStock(index: number): void {
+    if (confirm('Are you sure you want to remove this stock?')) {
+      this.stockData.stocks.splice(index, 1);
+    }
+  }
+
+  // Scroll to top
+  scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // Initialize component
   ngOnInit(): void {
     this.dateInput = this.getTodayDate(); // Set today's date as default
+  }
+
+  ngOnDestroy(): void {
+    // Clean up if needed
   }
 }

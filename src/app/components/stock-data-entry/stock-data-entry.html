@@ -6,7 +6,7 @@
     <div
       class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-6 transition-colors duration-300"
     >
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Stock Gainers Parser</h1>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Stock Data Entry</h1>
       <p class="text-gray-600 dark:text-gray-400">
         Paste tab-separated table data, select exchange and date to parse, display, and save stock
         information to database
@@ -133,27 +133,34 @@
     <!-- Results Section -->
     @if (showData) {
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-300"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 sm:p-6 transition-colors duration-300"
       >
-        <!-- Results Header -->
-        <div class="flex justify-between items-center mb-6">
+        <!-- Results Header - Mobile Responsive -->
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Stock Gainers Results</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Parsed Stock Data</h2>
             @if (stockData.date) {
-              <p class="text-gray-600 dark:text-gray-400">
-                Date: <span class="font-medium">{{ stockData.date | date : 'longDate' }}</span> •
-                Exchange: <span class="font-medium">{{ selectedExchange }}</span>
+              <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  {{ stockData.date | date : 'mediumDate' }}
+                </span>
+                <span class="mx-2">•</span>
+                <span class="font-medium">{{ selectedExchange }}</span>
               </p>
             }
-            <p class="text-gray-600 dark:text-gray-400">
-              Total Stocks: <span class="font-medium">{{ stockData.stocks.length }}</span>
+            <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Total Stocks: <span class="font-semibold text-blue-600 dark:text-blue-400">{{ stockData.stocks.length }}</span>
             </p>
           </div>
-          <div class="flex gap-3">
+          <!-- Action Buttons - Stack on mobile -->
+          <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <button
               (click)="saveToDatabase()"
               [disabled]="isSaving"
-              class="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full sm:w-auto px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-0 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white font-medium rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-sm"
             >
               @if (!isSaving) {
                 <span>Save to Database</span>
@@ -163,7 +170,7 @@
             </button>
             <button
               (click)="clearData()"
-              class="px-4 py-2 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-medium rounded-md transition-colors duration-200"
+              class="w-full sm:w-auto px-4 py-3 sm:py-2 min-h-[48px] sm:min-h-0 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-medium rounded-md transition-colors duration-200 text-base sm:text-sm"
             >
               Clear & Start Over
             </button>
@@ -207,8 +214,89 @@
         </div>
       }
 
-      <!-- Table -->
-      <div class="overflow-x-auto">
+      <!-- Mobile Card View -->
+      <div class="mobile-card-view">
+        @if (stockData.stocks.length) {
+          @for (stock of stockData.stocks; track stock.symbol; let i = $index) {
+            <div 
+              class="mobile-stock-card"
+              [class.mobile-card-high-gain]="stock.changePercent > 10"
+              [class.mobile-card-medium-gain]="stock.changePercent > 5 && stock.changePercent <= 10"
+              [class.expanded]="expandedCards[stock.symbol]"
+            >
+              <!-- Card Header -->
+              <div class="mobile-card-header" (click)="toggleCardExpand(stock.symbol)">
+                <div class="mobile-card-title-row">
+                  <span class="mobile-stock-symbol">{{ stock.symbol }}</span>
+                  <span 
+                    class="mobile-change-badge"
+                    [class.high-gain]="stock.changePercent > 10"
+                    [class.medium-gain]="stock.changePercent > 5 && stock.changePercent <= 10"
+                    [class.normal-gain]="stock.changePercent <= 5"
+                  >
+                    +{{ stock.changePercent.toFixed(2) }}%
+                  </span>
+                </div>
+                <p class="mobile-company-name">{{ stock.company }}</p>
+                <div class="expand-indicator">
+                  <svg 
+                    class="w-5 h-5 text-gray-400 transition-transform duration-200" 
+                    [class.rotate-180]="expandedCards[stock.symbol]"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Expandable Card Body -->
+              <div class="mobile-card-body" [class.show]="expandedCards[stock.symbol]">
+                <div class="mobile-card-row">
+                  <span class="mobile-card-label">Current Price</span>
+                  <span class="mobile-card-value">₹{{ formatPrice(stock.currentPrice) }}</span>
+                </div>
+                <div class="mobile-card-row">
+                  <span class="mobile-card-label">Last Day Price</span>
+                  <span class="mobile-card-value">₹{{ formatPrice(stock.lastDayPrice) }}</span>
+                </div>
+                <div class="mobile-card-row">
+                  <span class="mobile-card-label">Price Change</span>
+                  <span class="mobile-card-value text-green-600 dark:text-green-400">
+                    +₹{{ formatPrice(stock.currentPrice - stock.lastDayPrice) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Swipe to Delete Action -->
+              <div class="mobile-card-actions">
+                <button 
+                  (click)="removeStock(i)"
+                  class="mobile-delete-btn"
+                  title="Remove stock"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  <span>Remove</span>
+                </button>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="mobile-empty-state">
+            <svg class="mobile-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v1a1 1 0 001 1h4a1 1 0 001-1v-1m3-2V8a2 2 0 00-2-2H8a2 2 0 00-2 2v6m0 0h12"></path>
+            </svg>
+            <h3 class="mt-2 text-base font-medium text-gray-900 dark:text-white">No stock data found</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Please check your input format and try again</p>
+          </div>
+        }
+      </div>
+
+      <!-- Desktop Table View -->
+      <div class="desktop-table-view overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -237,10 +325,15 @@
               >
                 Last Day Price
               </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            @for (stock of stockData.stocks; track stock.symbol) {
+            @for (stock of stockData.stocks; track stock.symbol; let i = $index) {
             <tr
               class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
               [class.bg-green-100]="stock.changePercent > 10"
@@ -282,6 +375,17 @@
               >
                 ₹{{ formatPrice(stock.lastDayPrice) }}
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <button
+                  (click)="removeStock(i)"
+                  class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
+                  title="Remove stock"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </td>
             </tr>
             }
           </tbody>
@@ -290,7 +394,7 @@
 
       <!-- Empty State -->
       @if (stockData.stocks.length === 0) {
-        <div class="text-center py-12">
+        <div class="hidden lg:block text-center py-12">
           <div class="text-gray-500 dark:text-gray-400 text-lg">No stock data found</div>
           <p class="text-gray-400 dark:text-gray-500 mt-2">
             Please check your input format and try again
@@ -298,6 +402,19 @@
         </div>
       }
     </div>
+
+    <!-- Scroll to Top Button -->
+    @if (showScrollTop) {
+      <button
+        (click)="scrollToTop()"
+        class="fixed bottom-6 right-6 z-50 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-300 lg:hidden"
+        aria-label="Scroll to top"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+      </button>
+    }
   }
   </div>
 </div>

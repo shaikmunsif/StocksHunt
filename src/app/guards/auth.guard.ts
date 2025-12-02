@@ -13,8 +13,8 @@ export const authGuard: CanActivateFn = async () => {
   try {
     // Check current authentication state
     if (authService.isAuthenticated()) {
-      // User is logged in, redirect to manage-data for both login and register routes
-      router.navigate(['/manage-data']);
+      // User is logged in, redirect to stock-data-entry for both login and register routes
+      router.navigate(['/stock-data-entry']);
       return false;
     }
 
@@ -24,8 +24,8 @@ export const authGuard: CanActivateFn = async () => {
     } = await authService.supabase.auth.getSession();
 
     if (session?.user) {
-      // User has an active session, redirect to manage-data
-      router.navigate(['/manage-data']);
+      // User has an active session, redirect to stock-data-entry
+      router.navigate(['/stock-data-entry']);
       return false;
     }
 

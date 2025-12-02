@@ -4,9 +4,11 @@ import { dashboardGuard } from './guards/dashboard.guard';
 
 export const routes: Routes = [
   {
-    path: 'manage-data',
+    path: 'stock-data-entry',
     loadComponent: () =>
-      import('./components/stock-gainers/stock-gainers').then((m) => m.StockGainersComponent),
+      import('./components/stock-data-entry/stock-data-entry').then(
+        (m) => m.StockDataEntryComponent
+      ),
     canActivate: [dashboardGuard],
   },
   {
