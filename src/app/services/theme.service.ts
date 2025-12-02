@@ -43,12 +43,6 @@ export class ThemeService {
     this.updateDocumentClass();
   }
 
-  setTheme(theme: 'light' | 'dark'): void {
-    this.isDark.set(theme === 'dark');
-    localStorage.setItem(this.storageKey, theme);
-    this.updateDocumentClass();
-  }
-
   private updateDocumentClass(): void {
     const htmlElement = this.document.documentElement;
 

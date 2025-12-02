@@ -13,8 +13,4 @@ export class LayoutService {
   toggleSidebar(): void {
     this.sidebarCollapsed.update((value) => !value);
   }
-
-  setSidebarCollapsed(collapsed: boolean): void {
-    this.sidebarCollapsed.set(collapsed);
-  }
 }

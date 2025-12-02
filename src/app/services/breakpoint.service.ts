@@ -70,21 +70,4 @@ export class BreakpointService {
     this.isDesktop.set(bp === Breakpoint.Desktop);
     this.isMobileOrTablet.set(bp === Breakpoint.Mobile || bp === Breakpoint.Tablet);
   }
-
-  // Utility methods
-  matchesBreakpoint(breakpoint: Breakpoint): boolean {
-    return this.currentBreakpoint() === breakpoint;
-  }
-
-  isSmaller(breakpoint: Breakpoint): boolean {
-    const current = this.currentBreakpoint();
-    const order = [Breakpoint.Mobile, Breakpoint.Tablet, Breakpoint.Desktop];
-    return order.indexOf(current) < order.indexOf(breakpoint);
-  }
-
-  isLarger(breakpoint: Breakpoint): boolean {
-    const current = this.currentBreakpoint();
-    const order = [Breakpoint.Mobile, Breakpoint.Tablet, Breakpoint.Desktop];
-    return order.indexOf(current) > order.indexOf(breakpoint);
-  }
 }

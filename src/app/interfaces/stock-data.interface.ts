@@ -43,18 +43,52 @@ export interface MarketData {
 export interface CompanyWithMarketData extends Company {
   market_data?: MarketData;
   expanded?: boolean; // For UI state - expandable comments
-}
-
-export interface CompanyWithOccurrence extends CompanyWithMarketData {
-  occurrenceCount?: number;
+  occurrence_count?: number; // Pre-calculated from database view
 }
 
 export interface GroupedCompanyOccurrence extends Company {
   occurrenceCount: number;
   averageChange: number;
   latestPrice: number;
+  latestDate?: string;
   occurrences: MarketData[];
   expanded?: boolean; // For UI state - expandable comments
+}
+
+// Response from get_market_data_by_date RPC function
+export interface MarketDataByDateRpcResponse {
+  market_data_id: number;
+  company_id: string;
+  record_date: string;
+  current_price?: number;
+  previous_close?: number;
+  percentage_change?: number;
+  ticker_symbol: string;
+  company_name: string;
+  comments?: string;
+  exchange_id?: number;
+  category_id?: number;
+  exchange_code?: string;
+  exchange_name?: string;
+  category_name?: string;
+  occurrence_count: number;
+}
+
+// Response from get_company_market_summary RPC function
+export interface CompanyMarketSummaryRpcResponse {
+  company_id: string;
+  ticker_symbol: string;
+  company_name: string;
+  comments?: string;
+  exchange_id?: number;
+  category_id?: number;
+  exchange_code?: string;
+  exchange_name?: string;
+  category_name?: string;
+  occurrence_count: number;
+  average_change: number;
+  latest_price: number;
+  latest_date?: string;
 }
 
 export interface MarketDataResponse {

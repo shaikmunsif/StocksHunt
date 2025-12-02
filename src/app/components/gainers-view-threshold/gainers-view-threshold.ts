@@ -2,12 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
-import {
-  CompanyWithMarketData,
-  GroupedCompanyOccurrence,
-  MarketData,
-  MarketDataResponse,
-} from '../../interfaces/stock-data.interface';
+import { GroupedCompanyOccurrence, Exchange } from '../../interfaces/stock-data.interface';
 import { DialogService } from '../dialog/dialog.service';
 import { CommentModalComponent } from '../comment-modal/comment-modal.component';
 import { EditCompanyModalComponent } from '../edit-company-modal/edit-company-modal.component';
@@ -40,6 +35,7 @@ export class GainersViewThresholdComponent implements OnInit {
   readonly exchanges = ['NSE', 'BSE'];
 
   repeatedCompanies: GroupedCompanyOccurrence[] = [];
+  private exchangesCache: Exchange[] = [];
 
   sortColumn:
     | 'ticker_symbol'
@@ -56,45 +52,42 @@ export class GainersViewThresholdComponent implements OnInit {
 
   async loadAvailableDates(): Promise<void> {
     try {
-      this.availableDates = await this.databaseService.getAvailableDates();
+      // Load exchanges for ID lookup
+      this.exchangesCache = await this.databaseService.getExchanges();
       await this.loadMarketData();
     } catch (err) {
-      console.error('Error loading available dates:', err);
-      this.error = 'Unable to load the list of available dates. Please try again later.';
+      console.error('Error loading initial data:', err);
+      this.error = 'Unable to load data. Please try again later.';
     }
   }
 
   async loadMarketData(): Promise<void> {
-    if (!this.availableDates.length) {
-      this.repeatedCompanies = [];
-      return;
-    }
-
     this.isLoading = true;
     this.loadingProgress = 0;
     this.error = null;
 
     try {
-      const aggregatedCompanies: CompanyWithMarketData[] = [];
-      const totalDates = this.availableDates.length;
+      this.loadingProgress = 20;
 
-      for (let i = 0; i < this.availableDates.length; i++) {
-        const date = this.availableDates[i];
-        const data: MarketDataResponse = await this.databaseService.getMarketDataByDate(date);
-
-        // Update progress
-        this.loadingProgress = Math.round(((i + 1) / totalDates) * 100);
-
-        if (!data?.companies?.length) {
-          continue;
-        }
-
-        const filtered = this.applyExchangeFilter(data.companies);
-        aggregatedCompanies.push(...filtered);
+      // Get exchange ID if filtering by specific exchange
+      let exchangeId: number | undefined;
+      if (this.exchangeMode === 'one') {
+        const exchange = this.exchangesCache.find((e) => e.code === this.selectedExchange);
+        exchangeId = exchange?.id;
       }
 
-      this.repeatedCompanies = this.groupRepeatedCompanies(aggregatedCompanies);
+      this.loadingProgress = 40;
+
+      // Single API call using the optimized view!
+      this.repeatedCompanies = await this.databaseService.getCompanyMarketSummary(
+        this.repeatThreshold,
+        exchangeId
+      );
+
+      this.loadingProgress = 80;
+
       this.sortData(this.repeatedCompanies);
+      this.loadingProgress = 100;
     } catch (err) {
       console.error('Error loading threshold market data:', err);
       this.error = 'Failed to load market data. Please retry in a moment.';
@@ -103,74 +96,6 @@ export class GainersViewThresholdComponent implements OnInit {
       this.isLoading = false;
       this.loadingProgress = 0;
     }
-  }
-
-  private applyExchangeFilter(companies: CompanyWithMarketData[]): CompanyWithMarketData[] {
-    if (this.exchangeMode === 'one') {
-      return companies.filter((company) => company.exchange?.code === this.selectedExchange);
-    }
-
-    if (this.exchangeMode === 'none') {
-      return companies;
-    }
-
-    // `all` mode includes every exchange represented in the data
-    return companies;
-  }
-
-  private groupRepeatedCompanies(companies: CompanyWithMarketData[]): GroupedCompanyOccurrence[] {
-    const groupedMap = new Map<
-      string,
-      { company: CompanyWithMarketData; occurrences: MarketData[] }
-    >();
-
-    companies.forEach((company) => {
-      const key = company.ticker_symbol;
-      if (!key) {
-        return;
-      }
-
-      if (!groupedMap.has(key)) {
-        groupedMap.set(key, { company, occurrences: [] });
-      }
-
-      if (company.market_data) {
-        groupedMap.get(key)!.occurrences.push(company.market_data);
-      }
-    });
-
-    const groupedResults: GroupedCompanyOccurrence[] = [];
-
-    groupedMap.forEach(({ company, occurrences }) => {
-      if (occurrences.length <= this.repeatThreshold) {
-        return;
-      }
-
-      const sortedOccurrences = [...occurrences].sort(
-        (a, b) => new Date(b.record_date).getTime() - new Date(a.record_date).getTime()
-      );
-
-      const totalChange = occurrences.reduce((sum, item) => sum + (item.percentage_change ?? 0), 0);
-      const averageChange = occurrences.length ? totalChange / occurrences.length : 0;
-      const latestPrice = sortedOccurrences[0]?.current_price ?? 0;
-
-      groupedResults.push({
-        id: company.id,
-        ticker_symbol: company.ticker_symbol,
-        name: company.name,
-        comments: company.comments,
-        exchange_id: company.exchange_id,
-        category_id: company.category_id,
-        exchange: company.exchange,
-        category: company.category,
-        occurrenceCount: occurrences.length,
-        averageChange,
-        latestPrice,
-        occurrences: sortedOccurrences,
-      });
-    });
-
-    return groupedResults;
   }
 
   onRepeatThresholdChange(): void {

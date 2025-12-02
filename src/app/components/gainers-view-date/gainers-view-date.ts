@@ -38,9 +38,6 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   maxDate = '';
   private maxDateKey = 0;
 
-  // Occurrence tracking
-  occurrenceCounts: Map<string, number> = new Map();
-
   // Sorting properties - default to occurrence_count descending
   sortColumn: string = 'occurrence_count';
   sortDirection: 'asc' | 'desc' = 'desc';
@@ -137,13 +134,8 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
 
       this.marketData = data;
 
-      // Step 3: Load occurrence counts with real-time progress (25-95%)
-      if (data.companies) {
-        await this.loadOccurrenceCounts(data.companies);
-      }
-
-      // Step 4: Apply sorting (95-100%)
-      this.loadingProgress = 95;
+      // Step 3: Apply sorting (occurrence counts already included from database view)
+      this.loadingProgress = 90;
 
       if (data.companies) {
         this.sortData(data.companies);
@@ -352,14 +344,6 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
     return item.ticker_symbol;
   }
 
-  trackByDate(index: number, item: string): string {
-    return item;
-  }
-
-  trackByExchange(index: number, item: string): string {
-    return item;
-  }
-
   private formatDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -380,26 +364,8 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
     return dateKey > this.maxDateKey;
   }
 
-  async loadOccurrenceCounts(companies: CompanyWithMarketData[]): Promise<void> {
-    this.occurrenceCounts.clear();
-    const totalCompanies = companies.length;
-    const baseProgress = 25;
-    const progressRange = 70;
-    let completed = 0;
-
-    await Promise.all(
-      companies.map(async (company) => {
-        const count = await this.databaseService.getCompanyOccurrenceCount(company.ticker_symbol);
-        this.occurrenceCounts.set(company.ticker_symbol, count);
-        completed += 1;
-        this.loadingProgress =
-          baseProgress + Math.round((completed / totalCompanies) * progressRange);
-      })
-    );
-  }
-
   getOccurrenceCount(company: CompanyWithMarketData): number {
-    return this.occurrenceCounts.get(company.ticker_symbol) || 0;
+    return company.occurrence_count || 0;
   }
 
   /**
@@ -467,6 +433,12 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   }
 
   editRow(company: CompanyWithMarketData, index: number): void {
+    // Build occurrence counts map from company data for modal compatibility
+    const occurrenceCounts = new Map<string, number>();
+    this.marketData?.companies?.forEach((c) => {
+      occurrenceCounts.set(c.ticker_symbol, c.occurrence_count || 0);
+    });
+
     this.dialogService.open(EditCompanyModalComponent, {
       companyId: company.id,
       companyName: company.name,
@@ -511,7 +483,7 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
       },
       companiesList: this.marketData?.companies || [],
       currentIndex: index,
-      occurrenceCounts: this.occurrenceCounts,
+      occurrenceCounts: occurrenceCounts,
     });
   }
 }

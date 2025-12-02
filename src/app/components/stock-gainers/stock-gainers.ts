@@ -2,13 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../../services/stock.service';
-import { DatabaseService } from '../../services/database.service';
-import {
-  StockData,
-  StockGainersResponse,
-  MarketDataResponse,
-  CompanyWithMarketData,
-} from '../../interfaces/stock-data.interface';
+import { StockGainersResponse } from '../../interfaces/stock-data.interface';
 
 @Component({
   selector: 'app-stock-gainers',
@@ -18,7 +12,6 @@ import {
 })
 export class StockGainersComponent implements OnInit {
   private stockService = inject(StockService);
-  private databaseService = inject(DatabaseService);
 
   private readonly PROGRESS_DISPLAY_DELAY_MS = 500;
 
@@ -31,12 +24,6 @@ export class StockGainersComponent implements OnInit {
   saveMessage: string = '';
   saveProgress: number = 0;
   saveProgressMessage: string = '';
-
-  // New properties for database structure
-  marketData: MarketDataResponse = { date: '', companies: [] };
-  availableDates: string[] = [];
-  selectedDate: string = '';
-  showHistoricalData: boolean = false;
 
   // Exchange selection
   selectedExchange: string = 'NSE'; // Default to NSE
@@ -86,7 +73,6 @@ export class StockGainersComponent implements OnInit {
           this.saveProgress = 0;
           this.saveProgressMessage = '';
         }, 3000);
-        await this.loadAvailableDates(); // Refresh available dates
       } else {
         this.saveMessage = 'Failed to save data. Please try again.';
       }
@@ -99,66 +85,12 @@ export class StockGainersComponent implements OnInit {
     }
   }
 
-  // Load available dates from database
-  async loadAvailableDates(): Promise<void> {
-    try {
-      this.availableDates = await this.databaseService.getAvailableDates();
-    } catch (error) {
-      console.error('Error loading available dates:', error);
-      this.availableDates = [];
-    }
-  }
-
-  // Load market data for selected date
-  async loadMarketDataForDate(): Promise<void> {
-    if (!this.selectedDate) return;
-
-    try {
-      this.marketData = await this.stockService.getMarketData(this.selectedDate);
-      this.showHistoricalData = true;
-    } catch (error) {
-      console.error('Error loading market data:', error);
-      this.marketData = { date: this.selectedDate, companies: [] };
-    }
-  }
-
-  // Legacy methods for backward compatibility
-  async saveToSupabase(): Promise<void> {
-    if (!this.showData || this.stockData.stocks.length === 0) {
-      alert('No data to save');
-      return;
-    }
-
-    this.isSaving = true;
-    this.saveMessage = '';
-
-    try {
-      const success = await this.stockService.saveToSupabase(this.stockData);
-
-      if (success) {
-        this.saveMessage = 'Data saved successfully to Supabase!';
-        setTimeout(() => {
-          this.saveMessage = '';
-        }, 3000);
-      } else {
-        this.saveMessage = 'Failed to save data. Please try again.';
-      }
-    } catch (error) {
-      this.saveMessage = 'Error saving data. Please try again.';
-    } finally {
-      this.isSaving = false;
-    }
-  }
-
   clearData(): void {
     this.tableInput = '';
     this.dateInput = this.getTodayDate(); // Reset to today's date
     this.stockData = { date: '', stocks: [] };
-    this.marketData = { date: '', companies: [] };
     this.showData = false;
-    this.showHistoricalData = false;
     this.saveMessage = '';
-    this.selectedDate = '';
     this.selectedExchange = 'NSE'; // Reset to default exchange
   }
 
@@ -179,17 +111,8 @@ export class StockGainersComponent implements OnInit {
     });
   }
 
-  trackByStock(index: number, stock: StockData): string {
-    return stock.symbol;
-  }
-
-  trackByCompany(index: number, company: CompanyWithMarketData): string {
-    return company.id;
-  }
-
   // Initialize component
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.dateInput = this.getTodayDate(); // Set today's date as default
-    await this.loadAvailableDates();
   }
 }

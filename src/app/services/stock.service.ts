@@ -4,7 +4,6 @@ import {
   StockData,
   StockGainersResponse,
   ParsedStockData,
-  MarketDataResponse,
 } from '../interfaces/stock-data.interface';
 
 @Injectable({
@@ -149,38 +148,6 @@ export class StockService {
       );
     } catch (error) {
       console.error('Error saving to database:', error);
-      return false;
-    }
-  }
-
-  // Get data from new database structure
-  async getMarketData(date: string): Promise<MarketDataResponse> {
-    try {
-      return await this.databaseService.getMarketDataByDate(date);
-    } catch (error) {
-      console.error('Error fetching market data:', error);
-      return { date, companies: [] };
-    }
-  }
-
-  // Legacy Supabase methods (for backward compatibility)
-  async saveToSupabase(
-    stockData: StockGainersResponse,
-    exchangeCode: string = 'NSE'
-  ): Promise<boolean> {
-    try {
-      // Convert legacy format to new format and save
-      const parsedData: ParsedStockData[] = stockData.stocks.map((stock) => ({
-        tickerSymbol: stock.symbol,
-        companyName: stock.company,
-        changePercent: stock.changePercent,
-        currentPrice: stock.currentPrice,
-        lastDayPrice: stock.lastDayPrice,
-      }));
-
-      return await this.databaseService.saveMarketData(parsedData, stockData.date, exchangeCode);
-    } catch (error) {
-      console.error('Error saving to Supabase:', error);
       return false;
     }
   }

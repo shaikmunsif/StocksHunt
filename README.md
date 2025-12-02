@@ -26,7 +26,7 @@
 - **UI Framework**: Tailwind CSS 3.x
 - **State Management**: Angular Signals & RxJS
 - **Authentication**: Supabase Auth
-- **Database**: Supabase PostgreSQL with RLS
+- **Database**: Supabase PostgreSQL with RLS & RPC functions
 - **Charts**: Chart.js 4.x (dynamically imported)
 - **Build Tool**: Angular CLI with optimization
 - **TypeScript**: Strict mode enabled
@@ -79,15 +79,16 @@ npm run preview
 
 Our application uses advanced optimization techniques:
 
-- **Initial Bundle**: 560.77 kB (down from 942 kB - 40% reduction)
+- **Initial Bundle**: ~559 kB (down from 942 kB - 40% reduction)
 - **Lazy Chunks**:
   - Chart.js: 205 kB (loaded on-demand)
-  - Route components: 12-43 kB each
+  - Route components: 12-35 kB each
 - **Optimization Strategies**:
   - Route-based lazy loading with `loadComponent()`
   - Dynamic Chart.js import (type-only imports)
-  - Optimized CSS bundles (4.51 kB sidebar styles)
+  - Optimized CSS bundles
   - Tree-shaking and dead code elimination
+  - Optimized RPC functions for single API calls
 
 ## 🎯 Key Features Explained
 
@@ -104,16 +105,18 @@ Our application uses advanced optimization techniques:
 #### Date-Wise Analysis
 
 - View stock gainers by specific dates
-- Filter by date range and percentage thresholds
-- Sort by multiple columns
-- Occurrence count tracking
+- Filter by exchange (NSE/BSE)
+- Sort by multiple columns with smart defaults
+- Occurrence count tracking (via RPC function)
+- Single API call for all data
 
 #### Threshold Analysis
 
 - Analyze companies appearing multiple times
-- Configurable threshold filters (3+ occurrences)
+- Configurable threshold filters (1-10+ occurrences)
 - Average percentage change calculations
-- Smart filtering and sorting
+- Exchange filtering modes (All, Specific, None)
+- Single API call with server-side filtering
 
 ### 📈 Interactive Modals
 
