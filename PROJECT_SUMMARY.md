@@ -45,7 +45,7 @@ src/app/
 │   ├── sidebar/                    # Navigation with swipe gestures
 │   ├── gainers-view-date/          # Date-wise analysis
 │   ├── gainers-view-threshold/     # Threshold analysis
-│   ├── stock-gainers/              # Data management
+│   ├── stock-data-entry/           # Stock data entry & management
 │   ├── login/                      # Authentication
 │   ├── register/                   # User registration
 │   ├── dialog/                     # Modal system
@@ -249,7 +249,7 @@ SUPABASE_KEY=your_supabase_anon_key
 | --------------------- | ----------------------------- | -------------- |
 | `/login`              | LoginComponent                | authGuard      |
 | `/register`           | RegisterComponent             | authGuard      |
-| `/manage-data`        | StockGainersComponent         | dashboardGuard |
+| `/stock-data-entry`   | StockDataEntryComponent       | dashboardGuard |
 | `/analysis/date-wise` | GainersViewDateComponent      | dashboardGuard |
 | `/analysis/threshold` | GainersViewThresholdComponent | dashboardGuard |
 

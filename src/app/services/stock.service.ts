@@ -35,7 +35,7 @@ export class StockService {
         try {
           // Extract company name and symbol from first column
           const companyColumn = columns[0];
-          const companyMatch = companyColumn.match(/([A-Z]+)\s+(.+)/);
+          const companyMatch = companyColumn.match(/([A-Z0-9]+)\s+(.+)/);
           const symbol = companyMatch?.[1] || '';
           const company = companyMatch?.[2] || companyColumn;
 
@@ -94,7 +94,7 @@ export class StockService {
         try {
           // Extract company name and symbol from first column
           const companyColumn = columns[0];
-          const companyMatch = companyColumn.match(/([A-Z]+)\s+(.+)/);
+          const companyMatch = companyColumn.match(/([A-Z0-9]+)\s+(.+)/);
           const tickerSymbol = companyMatch?.[1] || '';
           const companyName = companyMatch?.[2] || companyColumn;
 

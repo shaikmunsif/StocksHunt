@@ -152,7 +152,7 @@ src/app/
 │   ├── dashboard/            # Main landing page
 │   ├── gainers-view-date/    # Date-wise analysis
 │   ├── gainers-view-threshold/ # Threshold analysis
-│   ├── stock-gainers/        # Data management
+│   ├── stock-data-entry/     # Stock data entry & management
 │   ├── login/               # Authentication
 │   ├── register/            # User registration
 │   ├── dialog/              # Modal system
