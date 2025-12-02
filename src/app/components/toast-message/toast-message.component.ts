@@ -11,14 +11,9 @@ export interface ToastMessage {
   imports: [IconsComponent],
   template: `
     @if (message()) {
-    <div
-      class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-slide-up"
-      role="alert"
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <div class="mt-4 w-full animate-slide-up" role="alert" aria-live="polite" aria-atomic="true">
       <div
-        class="rounded-lg p-4 shadow-lg border-2"
+        class="rounded-lg p-3 sm:p-4 shadow-lg border-2"
         [class.bg-green-50]="message()!.type === 'success'"
         [class.border-green-400]="message()!.type === 'success'"
         [class.bg-red-50]="message()!.type === 'error'"

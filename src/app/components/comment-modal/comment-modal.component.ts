@@ -45,9 +45,6 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
       </div>
     </div>
 
-    <!-- Success/Error Message -->
-    <app-toast-message [message]="saveMessage()"></app-toast-message>
-
     <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
       <button
         type="button"
@@ -87,6 +84,9 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
         Cancel
       </button>
     </div>
+
+    <!-- Success/Error Message - positioned after buttons for better mobile visibility -->
+    <app-toast-message [message]="saveMessage()"></app-toast-message>
   `,
 })
 export class CommentModalComponent implements OnInit, OnDestroy {
