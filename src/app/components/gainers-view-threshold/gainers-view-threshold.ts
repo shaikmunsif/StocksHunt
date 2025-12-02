@@ -57,7 +57,7 @@ export class GainersViewThresholdComponent implements OnInit {
       await this.loadMarketData();
     } catch (err) {
       console.error('Error loading initial data:', err);
-      this.error = 'Unable to load data. Please try again later.';
+      this.error = 'Unable to load exchanges. Please try again later.';
     }
   }
 

@@ -72,6 +72,7 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
       await this.loadMarketData();
     } catch (error) {
       console.error('Error loading available dates:', error);
+      this.error = 'Unable to load the list of available dates. Please try again later.';
     }
   }
 
@@ -365,7 +366,16 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   }
 
   getOccurrenceCount(company: CompanyWithMarketData): number {
-    return company.occurrence_count || 0;
+    if (company.occurrence_count === undefined) {
+      console.warn(
+        `occurrence_count is missing for company: ${
+          company.ticker_symbol || company.id || '[unknown]'
+        }`,
+        company
+      );
+      return 0;
+    }
+    return company.occurrence_count;
   }
 
   /**

@@ -50,6 +50,10 @@ export interface GroupedCompanyOccurrence extends Company {
   occurrenceCount: number;
   averageChange: number;
   latestPrice: number;
+  /**
+   * The latest date for which market data is available for this company.
+   * May be undefined if there are no occurrences or if the data source does not provide a latest date.
+   */
   latestDate?: string;
   occurrences: MarketData[];
   expanded?: boolean; // For UI state - expandable comments
