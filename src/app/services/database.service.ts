@@ -8,6 +8,9 @@ import {
   CompanyWithMarketData,
   MarketDataResponse,
   ParsedStockData,
+  GroupedCompanyOccurrence,
+  MarketDataByDateRpcResponse,
+  CompanyMarketSummaryRpcResponse,
 } from '../interfaces/stock-data.interface';
 
 @Injectable({
@@ -211,44 +214,51 @@ export class DatabaseService {
     }
   }
 
-  // Market data operations
+  // Market data operations - Using RPC for single API call with occurrence counts
   async getMarketDataByDate(date: string): Promise<MarketDataResponse> {
     try {
-      const { data, error } = await this.authService.supabase
-        .from('market_data')
-        .select(
-          `
-          *,
-          company:companies(
-            *,
-            exchange:exchanges(code, name),
-            category:categories(name)
-          )
-        `
-        )
-        .eq('record_date', date)
-        .order('percentage_change', { ascending: false, nullsFirst: false });
+      // Single RPC call - returns data pre-sorted by occurrence_count DESC, percentage_change DESC
+      const { data, error } = await this.authService.supabase.rpc('get_market_data_by_date', {
+        target_date: date,
+      });
 
       if (error) throw error;
 
-      const companies: CompanyWithMarketData[] = (data || []).map((item) => ({
-        ...item.company,
-        market_data: {
-          id: item.id,
-          company_id: item.company_id,
-          record_date: item.record_date,
-          current_price: item.current_price,
-          previous_close: item.previous_close,
-          percentage_change: item.percentage_change,
-          updated_by: item.updated_by,
-          updated_at: item.updated_at,
-        },
-      }));
+      // Map RPC response to existing interface format
+      const companies: CompanyWithMarketData[] = (data || []).map(
+        (item: MarketDataByDateRpcResponse) => ({
+          id: item.company_id,
+          ticker_symbol: item.ticker_symbol,
+          name: item.company_name,
+          comments: item.comments,
+          exchange_id: item.exchange_id,
+          category_id: item.category_id,
+          exchange: item.exchange_code
+            ? {
+                id: item.exchange_id!,
+                code: item.exchange_code,
+                name: item.exchange_name,
+              }
+            : undefined,
+          category: item.category_name
+            ? {
+                id: item.category_id!,
+                name: item.category_name,
+              }
+            : undefined,
+          market_data: {
+            id: item.market_data_id,
+            company_id: item.company_id,
+            record_date: item.record_date,
+            current_price: item.current_price,
+            previous_close: item.previous_close,
+            percentage_change: item.percentage_change,
+          },
+          occurrence_count: item.occurrence_count,
+        })
+      );
 
-      return {
-        date,
-        companies,
-      };
+      return { date, companies };
     } catch (error) {
       console.error('Error fetching market data:', error);
       return { date, companies: [] };
@@ -420,38 +430,6 @@ export class DatabaseService {
     }
   }
 
-  // Get company occurrence count across all dates
-  async getCompanyOccurrenceCount(tickerSymbol: string): Promise<number> {
-    try {
-      const { data, error } = await this.authService.supabase
-        .from('market_data')
-        .select('id', { count: 'exact', head: false })
-        .eq('company_id', await this.getCompanyIdByTicker(tickerSymbol));
-
-      if (error) throw error;
-      return data?.length || 0;
-    } catch (error) {
-      console.error('Error getting occurrence count:', error);
-      return 0;
-    }
-  }
-
-  private async getCompanyIdByTicker(tickerSymbol: string): Promise<string | null> {
-    try {
-      const { data, error } = await this.authService.supabase
-        .from('companies')
-        .select('id')
-        .eq('ticker_symbol', tickerSymbol)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data?.id || null;
-    } catch (error) {
-      console.error('Error getting company ID:', error);
-      return null;
-    }
-  }
-
   // Get historical market data for a company
   async getCompanyHistoricalData(companyId: string): Promise<MarketData[]> {
     try {
@@ -465,6 +443,54 @@ export class DatabaseService {
       return data || [];
     } catch (error) {
       console.error('Error fetching historical data:', error);
+      return [];
+    }
+  }
+
+  // Get company market summary using RPC - single API call for threshold component
+  // Returns data pre-sorted by occurrence_count DESC, average_change DESC
+  async getCompanyMarketSummary(
+    thresholdCount: number,
+    exchangeId?: number
+  ): Promise<GroupedCompanyOccurrence[]> {
+    try {
+      // Single RPC call with parameters for filtering
+      const { data, error } = await this.authService.supabase.rpc('get_company_market_summary', {
+        threshold_count: thresholdCount,
+        filter_exchange_id: exchangeId || null,
+      });
+
+      if (error) throw error;
+
+      // Map RPC response to GroupedCompanyOccurrence format
+      return (data || []).map((item: CompanyMarketSummaryRpcResponse) => ({
+        id: item.company_id,
+        ticker_symbol: item.ticker_symbol,
+        name: item.company_name,
+        comments: item.comments,
+        exchange_id: item.exchange_id,
+        category_id: item.category_id,
+        exchange: item.exchange_code
+          ? {
+              id: item.exchange_id!,
+              code: item.exchange_code,
+              name: item.exchange_name,
+            }
+          : undefined,
+        category: item.category_name
+          ? {
+              id: item.category_id!,
+              name: item.category_name,
+            }
+          : undefined,
+        occurrenceCount: item.occurrence_count,
+        averageChange: item.average_change,
+        latestPrice: item.latest_price,
+        latestDate: item.latest_date,
+        occurrences: [], // Empty - individual records not needed
+      }));
+    } catch (error) {
+      console.error('Error fetching company market summary:', error);
       return [];
     }
   }

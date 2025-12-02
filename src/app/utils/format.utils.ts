@@ -59,24 +59,3 @@ export function getChangeClass(change?: number): string {
   if (change === undefined || change === null) return 'text-gray-500';
   return change >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
 }
-
-/**
- * Get CSS class for positive/negative change values (with dark mode support).
- * @param change - The change value to evaluate
- * @returns CSS class string for styling with dark mode
- */
-export function getChangeClassWithDark(change?: number): string {
-  if (change === undefined || change === null) return 'text-gray-500';
-  return change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-}
-
-/**
- * Format a date string for display.
- * @param dateString - ISO date string
- * @returns Formatted date string (e.g., "29 Nov")
- */
-export function formatDateShort(dateString?: string): string {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-}

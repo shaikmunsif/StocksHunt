@@ -19,6 +19,4 @@ export {
   formatChange,
   formatChangeWithSign,
   getChangeClass,
-  getChangeClassWithDark,
-  formatDateShort,
 } from '../utils/format.utils';

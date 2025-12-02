@@ -1,6 +1,6 @@
 # 📊 StockGainers - Project Summary
 
-> **Last Updated:** November 30, 2025  
+> **Last Updated:** December 2, 2025  
 > **Angular Version:** 20.x  
 > **Status:** Production Ready ✅
 
@@ -30,7 +30,7 @@ StockGainers is a professional Angular application for analyzing stock market pe
 | **UI**        | Tailwind CSS 3.x                    |
 | **State**     | Angular Signals & RxJS              |
 | **Auth**      | Supabase Auth                       |
-| **Database**  | Supabase PostgreSQL with RLS        |
+| **Database**  | Supabase PostgreSQL with RLS & RPC  |
 | **Charts**    | Chart.js 4.x (dynamic import)       |
 | **Build**     | Angular CLI with esbuild            |
 | **Language**  | TypeScript (strict mode)            |
@@ -141,6 +141,7 @@ export class SidebarComponent {
 - Full column sorting (ticker, name, price, change, category, occurrences)
 - Interactive row editing with modal navigation
 - CSV export with current filters
+- **Optimized**: Single RPC call with pre-calculated occurrence counts
 
 ### Threshold Analysis (`/analysis/threshold`)
 
@@ -149,6 +150,7 @@ export class SidebarComponent {
 - Exchange modes: All, Specific, None
 - Average change calculations
 - Previous/Next modal navigation
+- **Optimized**: Single RPC call with server-side filtering
 
 ---
 
@@ -183,10 +185,11 @@ export class SidebarComponent {
 
 ### DatabaseService
 
-- CRUD operations for all entities
+- RPC-based data operations (`get_market_data_by_date`, `get_company_market_summary`)
+- CRUD operations for companies, categories, exchanges
 - Historical data retrieval
-- Occurrence counting
 - Category management
+- SECURITY INVOKER for automatic RLS enforcement
 
 ### BreakpointService
 
@@ -200,9 +203,15 @@ export class SidebarComponent {
 
 | Bundle           | Size     | Strategy                 |
 | ---------------- | -------- | ------------------------ |
-| **Initial**      | 570 kB   | Route-based splitting    |
+| **Initial**      | ~559 kB  | Route-based splitting    |
 | **Chart.js**     | 205 kB   | Dynamic import on-demand |
-| **Route chunks** | 12-43 kB | Lazy loading             |
+| **Route chunks** | 12-35 kB | Lazy loading             |
+
+### API Optimization
+
+- **RPC Functions**: Reduced API calls from 101 to 2 (for 50 companies)
+- **Server-side Filtering**: Threshold and exchange filtering done in database
+- **Pre-calculated Metrics**: Occurrence counts computed in SQL
 
 ---
 
