@@ -146,67 +146,6 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
           >
             <canvas #priceChart></canvas>
           </div>
-
-          <!-- Historical Data Table -->
-          <div class="mt-4 max-h-48 overflow-y-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead class="bg-gray-50 dark:bg-gray-900 sticky top-0">
-                <tr>
-                  <th
-                    class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"
-                  >
-                    Date
-                  </th>
-                  <th
-                    class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"
-                  >
-                    Price
-                  </th>
-                  <th
-                    class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"
-                  >
-                    Prev Close
-                  </th>
-                  <th
-                    class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase"
-                  >
-                    Change %
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-              >
-                @for (data of historicalData(); track data.id) {
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td class="px-3 py-2 text-xs text-gray-900 dark:text-gray-200">
-                    {{ formatDate(data.record_date) }}
-                  </td>
-                  <td
-                    class="px-3 py-2 text-xs text-right font-medium text-gray-900 dark:text-gray-200"
-                  >
-                    {{ formatPrice(data.current_price) }}
-                  </td>
-                  <td class="px-3 py-2 text-xs text-right text-gray-600 dark:text-gray-400">
-                    {{ formatPrice(data.previous_close) }}
-                  </td>
-                  <td
-                    class="px-3 py-2 text-xs text-right font-semibold"
-                    [class.text-green-600]="(data.percentage_change ?? 0) >= 0"
-                    [class.text-red-600]="(data.percentage_change ?? 0) < 0"
-                    [class.dark:text-green-400]="(data.percentage_change ?? 0) >= 0"
-                    [class.dark:text-red-400]="(data.percentage_change ?? 0) < 0"
-                    [class.text-gray-500]="
-                      data.percentage_change === undefined || data.percentage_change === null
-                    "
-                  >
-                    {{ formatChange(data.percentage_change) }}
-                  </td>
-                </tr>
-                }
-              </tbody>
-            </table>
-          </div>
         </div>
         } @else {
         <div
