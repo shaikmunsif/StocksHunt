@@ -71,9 +71,14 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
         >
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Ticker:</span>
-            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">{{
-              tickerSymbol
-            }}</span>
+            <a
+              class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
+              [href]="'https://www.screener.in/company/' + tickerSymbol"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ tickerSymbol }}
+            </a>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Company:</span>
