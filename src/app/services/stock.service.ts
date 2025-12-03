@@ -34,9 +34,12 @@ export class StockService {
       if (columns.length >= 4) {
         try {
           // Extract company name and symbol from first column
+          // Pattern: SYMBOL CompanyName (e.g., "RELIANCE Reliance Industries" or "3MINDIA 3M India")
+          // Uses case-insensitive match to handle various input formats
+          // Supports ticker symbols starting with digits (e.g., 3MINDIA, 21STCENMGM)
           const companyColumn = columns[0];
-          const companyMatch = companyColumn.match(/([A-Z0-9]+)\s+(.+)/);
-          const symbol = companyMatch?.[1] || '';
+          const companyMatch = companyColumn.match(/^([A-Z0-9]+)\s+(.+)/i);
+          const symbol = companyMatch?.[1]?.toUpperCase() || '';
           const company = companyMatch?.[2] || companyColumn;
 
           // Extract change percent
@@ -93,9 +96,12 @@ export class StockService {
       if (columns.length >= 4) {
         try {
           // Extract company name and symbol from first column
+          // Pattern: SYMBOL CompanyName (e.g., "RELIANCE Reliance Industries" or "3MINDIA 3M India")
+          // Uses case-insensitive match to handle various input formats
+          // Supports ticker symbols starting with digits (e.g., 3MINDIA, 21STCENMGM)
           const companyColumn = columns[0];
-          const companyMatch = companyColumn.match(/([A-Z0-9]+)\s+(.+)/);
-          const tickerSymbol = companyMatch?.[1] || '';
+          const companyMatch = companyColumn.match(/^([A-Z0-9]+)\s+(.+)/i);
+          const tickerSymbol = companyMatch?.[1]?.toUpperCase() || '';
           const companyName = companyMatch?.[2] || companyColumn;
 
           // Extract change percent
