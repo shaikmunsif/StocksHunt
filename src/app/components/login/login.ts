@@ -47,13 +47,15 @@ export class LoginComponent {
         } else {
           this.errorMessage.set(result.error.message);
         }
-      } else {
-        // Login successful - check email confirmation status using cached data
-        const isConfirmed = this.authService.isEmailConfirmed();
+      } else if (result.data?.session) {
+        // Login successful - check email confirmation using session data directly
+        // This avoids race condition with onAuthStateChange
+        const user = result.data.session.user;
+        const isConfirmed = user.email_confirmed_at !== null;
 
         if (isConfirmed) {
-          // Navigate directly to manage-data without showing dialog
-          this.router.navigate(['/manage-data']);
+          // Navigate to stock-data-entry page
+          this.router.navigate(['/stock-data-entry']);
         } else {
           this.needsEmailConfirmation.set(true);
           this.errorMessage.set(

@@ -146,6 +146,109 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
           >
             <canvas #priceChart></canvas>
           </div>
+
+          <!-- Historical Data Accordion -->
+          <div class="mt-4">
+            <!-- Accordion Header -->
+            <button
+              type="button"
+              (click)="toggleHistoryTable()"
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors duration-200 group"
+            >
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-300 ease-in-out"
+                  [class.rotate-180]="isHistoryTableExpanded()"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+                <span
+                  class="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors duration-200"
+                >
+                  Show Historical Data
+                </span>
+              </div>
+              <span class="text-xs text-slate-400 dark:text-slate-500">
+                {{ historicalData().length }} records
+              </span>
+            </button>
+
+            <!-- Accordion Body -->
+            <div
+              class="overflow-hidden transition-all duration-300 ease-in-out"
+              [style.max-height]="isHistoryTableExpanded() ? '280px' : '0px'"
+              [style.opacity]="isHistoryTableExpanded() ? '1' : '0'"
+            >
+              <div
+                class="mt-2 max-h-64 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
+              >
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                  <thead class="bg-slate-100 dark:bg-slate-800 sticky top-0">
+                    <tr>
+                      <th
+                        class="px-3 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"
+                      >
+                        Date
+                      </th>
+                      <th
+                        class="px-3 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"
+                      >
+                        Price
+                      </th>
+                      <th
+                        class="px-3 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"
+                      >
+                        Prev Close
+                      </th>
+                      <th
+                        class="px-3 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase"
+                      >
+                        Change %
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="bg-white dark:bg-slate-800/50 divide-y divide-slate-200 dark:divide-slate-700"
+                  >
+                    @for (data of historicalData(); track data.id) {
+                    <tr
+                      class="hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors duration-150"
+                    >
+                      <td class="px-3 py-2 text-xs text-slate-700 dark:text-slate-300">
+                        {{ formatDate(data.record_date) }}
+                      </td>
+                      <td
+                        class="px-3 py-2 text-xs text-right font-medium text-slate-800 dark:text-slate-200"
+                      >
+                        {{ formatPrice(data.current_price) }}
+                      </td>
+                      <td class="px-3 py-2 text-xs text-right text-slate-500 dark:text-slate-400">
+                        {{ formatPrice(data.previous_close) }}
+                      </td>
+                      <td
+                        class="px-3 py-2 text-xs text-right font-semibold"
+                        [class.text-green-600]="(data.percentage_change ?? 0) >= 0"
+                        [class.text-red-600]="(data.percentage_change ?? 0) < 0"
+                        [class.dark:text-green-400]="(data.percentage_change ?? 0) >= 0"
+                        [class.dark:text-red-400]="(data.percentage_change ?? 0) < 0"
+                      >
+                        {{ formatChange(data.percentage_change) }}
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
         } @else {
         <div
@@ -333,6 +436,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   isLoadingChart = signal(true);
   historicalData = signal<MarketData[]>([]);
   saveMessage = signal<ToastMessage | null>(null);
+  isHistoryTableExpanded = signal(false);
 
   private readonly AUTO_HIDE_DURATION = 3000;
   private messageTimeout?: number;
@@ -530,7 +634,7 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   formatDate(dateString?: string): string {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
   }
 
   formatPrice(price?: number): string {
@@ -664,8 +768,15 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
     this.category = company.category?.name || '';
     this.comment = company.comments || '';
 
+    // Collapse accordion on navigation
+    this.isHistoryTableExpanded.set(false);
+
     // Reload historical data for new company
     this.loadHistoricalData();
+  }
+
+  toggleHistoryTable(): void {
+    this.isHistoryTableExpanded.update((v) => !v);
   }
 
   // Touch event handlers for mobile swipe navigation
