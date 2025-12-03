@@ -235,10 +235,20 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
                       </td>
                       <td
                         class="px-3 py-2 text-xs text-right font-semibold"
-                        [class.text-green-600]="(data.percentage_change ?? 0) >= 0"
-                        [class.text-red-600]="(data.percentage_change ?? 0) < 0"
-                        [class.dark:text-green-400]="(data.percentage_change ?? 0) >= 0"
-                        [class.dark:text-red-400]="(data.percentage_change ?? 0) < 0"
+                        [class.text-green-600]="
+                          data.percentage_change != null && data.percentage_change >= 0
+                        "
+                        [class.text-red-600]="
+                          data.percentage_change != null && data.percentage_change < 0
+                        "
+                        [class.dark:text-green-400]="
+                          data.percentage_change != null && data.percentage_change >= 0
+                        "
+                        [class.dark:text-red-400]="
+                          data.percentage_change != null && data.percentage_change < 0
+                        "
+                        [class.text-gray-500]="data.percentage_change == null"
+                        [class.dark:text-gray-400]="data.percentage_change == null"
                       >
                         {{ formatChange(data.percentage_change) }}
                       </td>
