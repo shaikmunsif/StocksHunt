@@ -45,6 +45,20 @@ export class GainersViewDateComponent implements OnInit, OnDestroy {
   private progressInterval?: number;
   private currentRequestId = 0;
 
+  getCategoryClass(categoryName?: string): string {
+    const isAvoid = categoryName === 'Avoid';
+    return isAvoid
+      ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+  }
+
+  getRowClass(categoryName?: string): string {
+    const isAvoid = categoryName === 'Avoid';
+    return isAvoid
+      ? 'bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-800/30'
+      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50';
+  }
+
   ngOnInit(): void {
     this.initializeDefaults();
     this.loadAvailableDates();
