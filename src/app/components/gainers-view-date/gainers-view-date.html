@@ -155,7 +155,7 @@
       <div class="mobile-card-view">
         @if ((marketData?.companies || []).length) { @for (company of marketData?.companies || [];
         track company.id; let i = $index) {
-        <div class="mobile-card">
+        <div class="mobile-card" [class.mobile-card-avoid]="company.category?.name === 'Avoid'">
           <div class="mobile-card-header">
             <div class="mobile-card-title">
               <a
@@ -211,7 +211,8 @@
             <div class="mobile-card-row">
               <span class="mobile-card-label">Category:</span>
               <span
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                [class]="getCategoryClass(company.category?.name)"
               >
                 {{ company.category?.name || 'N/A' }}
               </span>
@@ -403,7 +404,10 @@
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             @if ((marketData?.companies || []).length) { @for (company of marketData?.companies ||
             []; track company.id; let i = $index) {
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+            <tr
+              class="transition-colors duration-150"
+              [class]="getRowClass(company.category?.name)"
+            >
               <td class="table-cell-text">
                 <a
                   class="text-blue-600 hover:underline dark:text-blue-400"
@@ -438,7 +442,8 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                 <span
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  [class]="getCategoryClass(company.category?.name)"
                 >
                   {{ company.category?.name || 'N/A' }}
                 </span>

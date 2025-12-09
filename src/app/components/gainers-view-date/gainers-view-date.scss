@@ -63,6 +63,17 @@ button[title="Edit comment"] {
         background: #1f2937;
         border-color: #374151;
     }
+
+    // Avoid category variant
+    &.mobile-card-avoid {
+        background: #fef2f2; // bg-red-50
+        border-color: #fecaca; // border-red-200
+
+        :host-context(.dark) & {
+            background: rgba(127, 29, 29, 0.2); // bg-red-900/20
+            border-color: #991b1b; // border-red-800
+        }
+    }
 }
 
 .mobile-card-header {

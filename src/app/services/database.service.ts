@@ -186,10 +186,13 @@ export class DatabaseService {
         const existingCompany = await this.getCompanyBySymbol(companyData.ticker_symbol);
 
         if (existingCompany) {
-          // Update existing company
+          // Update existing company - exclude user-managed fields (category_id, comments)
+          // These should only be modified via updateCompanyCategory/updateCompanyComment
+          const { category_id, comments, ...updateFields } = companyRecord;
+
           const { data, error } = await this.authService.supabase
             .from('companies')
-            .update(companyRecord)
+            .update(updateFields)
             .eq('ticker_symbol', companyData.ticker_symbol)
             .select()
             .single();

@@ -34,10 +34,18 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
       <div class="mb-6">
         <div class="flex items-center gap-4">
           <div
-            class="flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900"
+            class="flex items-center justify-center h-12 w-12 rounded-full"
+            [class.bg-red-100]="categoryValue === 'Avoid'"
+            [class.dark:bg-red-900]="categoryValue === 'Avoid'"
+            [class.bg-blue-100]="categoryValue !== 'Avoid'"
+            [class.dark:bg-blue-900]="categoryValue !== 'Avoid'"
           >
             <svg
-              class="h-6 w-6 text-blue-600 dark:text-blue-300"
+              class="h-6 w-6"
+              [class.text-red-600]="categoryValue === 'Avoid'"
+              [class.dark:text-red-300]="categoryValue === 'Avoid'"
+              [class.text-blue-600]="categoryValue !== 'Avoid'"
+              [class.dark:text-blue-300]="categoryValue !== 'Avoid'"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
