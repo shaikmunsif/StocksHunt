@@ -18,7 +18,7 @@
         <div class="flex flex-wrap gap-3">
           <button
             (click)="refreshData()"
-            [disabled]="isLoading"
+            [disabled]="isLoading()"
             class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
           </button>
           <button
             (click)="exportToCSV()"
-            [disabled]="isLoading || !marketData?.companies?.length"
+            [disabled]="isLoading() || !marketData()?.companies?.length"
             class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,12 +61,13 @@
           >
           <select
             id="date-input"
-            [(ngModel)]="selectedDate"
+            [ngModel]="selectedDate()"
+            (ngModelChange)="selectedDate.set($event)"
             (change)="onDateChange()"
-            [disabled]="!availableDates.length"
+            [disabled]="!availableDates().length"
             class="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            @for (date of availableDates; track date) {
+            @for (date of availableDates(); track date) {
             <option [value]="date">
               {{ date | date : 'mediumDate' }}
             </option>
@@ -83,7 +84,8 @@
           >
           <select
             id="exchange-input"
-            [(ngModel)]="selectedExchange"
+            [ngModel]="selectedExchange()"
+            (ngModelChange)="selectedExchange.set($event)"
             (change)="onExchangeChange()"
             class="w-full px-4 py-2.5 rounded-lg border-2 border-blue-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm"
           >
@@ -92,7 +94,7 @@
             }
           </select>
           <p class="text-xs text-gray-500 dark:text-gray-400">
-            Filtering results for {{ selectedExchange }}.
+            Filtering results for {{ selectedExchange() }}.
           </p>
         </div>
 
@@ -101,12 +103,12 @@
           <div
             class="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
           >
-            @if (isLoading) {
+            @if (isLoading()) {
             <div class="flex items-center gap-3 w-full">
               <div class="flex-1 flex items-center justify-between">
                 <span class="text-xs uppercase tracking-wide">Loading...</span>
-                @if (loadingProgress > 0) {
-                <span class="text-sm font-semibold">{{ loadingProgress }}%</span>
+                @if (loadingProgress() > 0) {
+                <span class="text-sm font-semibold">{{ loadingProgress() }}%</span>
                 }
               </div>
               <div
@@ -115,7 +117,7 @@
             </div>
             } @else {
             <span class="text-xs uppercase tracking-wide">Companies</span>
-            <span class="text-lg font-semibold">{{ marketData?.companies?.length || 0 }}</span>
+            <span class="text-lg font-semibold">{{ marketData()?.companies?.length || 0 }}</span>
             }
           </div>
         </div>
@@ -123,22 +125,22 @@
     </div>
 
     <!-- Loading State with Shimmer -->
-    @if (isLoading) {
+    @if (isLoading()) {
     <app-shimmer-loader type="table" [rows]="10" [showHeader]="true"></app-shimmer-loader>
     }
 
     <!-- Error State -->
-    @if (error && !isLoading) {
+    @if (error() && !isLoading()) {
     <div
       class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
     >
       <h3 class="text-red-800 dark:text-red-200 font-semibold">Unable to load data</h3>
-      <p class="text-red-600 dark:text-red-300 mt-1">{{ error }}</p>
+      <p class="text-red-600 dark:text-red-300 mt-1">{{ error() }}</p>
     </div>
     }
 
     <!-- Data Table -->
-    @if (!isLoading && !error) {
+    @if (!isLoading() && !error()) {
     <div
       class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300"
     >
@@ -146,14 +148,14 @@
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Market Data</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
           Showing results for
-          <span class="font-medium">{{ selectedDate | date : 'mediumDate' }}</span>
-          ({{ selectedExchange }}).
+          <span class="font-medium">{{ selectedDate() | date : 'mediumDate' }}</span>
+          ({{ selectedExchange() }}).
         </p>
       </div>
 
       <!-- Mobile Card View -->
       <div class="mobile-card-view">
-        @if ((marketData?.companies || []).length) { @for (company of marketData?.companies || [];
+        @if ((marketData()?.companies || []).length) { @for (company of marketData()?.companies || [];
         track company.id; let i = $index) {
         <div class="mobile-card" [class.mobile-card-avoid]="company.category?.name === 'Avoid'">
           <div class="mobile-card-header">
@@ -402,7 +404,7 @@
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            @if ((marketData?.companies || []).length) { @for (company of marketData?.companies ||
+            @if ((marketData()?.companies || []).length) { @for (company of marketData()?.companies ||
             []; track company.id; let i = $index) {
             <tr
               class="transition-colors duration-150"

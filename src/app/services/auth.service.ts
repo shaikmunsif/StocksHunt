@@ -1,13 +1,13 @@
-import { Injectable, signal, OnDestroy } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { AuthResponse, createClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { from, Observable, of, BehaviorSubject } from 'rxjs';
-import { map, distinctUntilChanged } from 'rxjs/operators';
+import { from, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService implements OnDestroy {
+export class AuthService {
   supabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
     auth: {
       storageKey: 'sb-auth-token',
@@ -20,22 +20,12 @@ export class AuthService implements OnDestroy {
   currentUser = signal<{ email: string; username: string } | null>(null);
   isEmailConfirmed = signal(false);
 
-  private authStateSubject = new BehaviorSubject<User | null>(null);
-  private authState$ = this.authStateSubject.asObservable().pipe(distinctUntilChanged());
-
   constructor() {
-    // Check for existing session on service initialization
     this.checkExistingSession();
 
-    // Listen for auth state changes
     this.supabase.auth.onAuthStateChange((event, session) => {
       this.updateUserState(session?.user || null);
-      this.authStateSubject.next(session?.user || null);
     });
-  }
-
-  ngOnDestroy() {
-    this.authStateSubject.complete();
   }
 
   private async checkExistingSession() {
@@ -50,7 +40,6 @@ export class AuthService implements OnDestroy {
       }
       if (session?.user) {
         this.updateUserState(session.user);
-        this.authStateSubject.next(session.user);
       }
     } catch (error) {
       console.error('Error checking existing session:', error);
@@ -97,24 +86,6 @@ export class AuthService implements OnDestroy {
   logout() {
     const promise = this.supabase.auth.signOut();
     return from(promise);
-  }
-
-  // Check if user's email is confirmed (cached version)
-  checkEmailConfirmation(): Observable<boolean> {
-    return this.authState$.pipe(
-      map((user) => {
-        if (user) {
-          this.isEmailConfirmed.set(user.email_confirmed_at !== null);
-          return user.email_confirmed_at !== null;
-        }
-        return false;
-      })
-    );
-  }
-
-  // Get current user session (cached version)
-  getCurrentUser(): Observable<User | null> {
-    return this.authState$;
   }
 
   // Resend confirmation email

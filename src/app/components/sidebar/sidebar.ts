@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthService } from '../../services/auth.service';
@@ -30,7 +30,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private readonly layoutService = inject(LayoutService);
   private readonly router = inject(Router);
 
-  isMobileMenuOpen = false;
+  isMobileMenuOpen = signal(false);
   private touchStartX = 0;
   private touchStartY = 0;
   private routerSubscription?: Subscription;
@@ -83,9 +83,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    this.isMobileMenuOpen.update(v => !v);
     // Prevent body scroll when menu is open
-    if (this.isMobileMenuOpen) {
+    if (this.isMobileMenuOpen()) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -93,7 +93,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   closeMobileMenu(): void {
-    this.isMobileMenuOpen = false;
+    this.isMobileMenuOpen.set(false);
     document.body.style.overflow = '';
   }
 
@@ -106,7 +106,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onResize(): void {
     // Close mobile menu on resize to desktop
-    if (window.innerWidth >= 1024 && this.isMobileMenuOpen) {
+    if (window.innerWidth >= 1024 && this.isMobileMenuOpen()) {
       this.closeMobileMenu();
     }
   }
@@ -157,9 +157,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
       if (deltaX > 0 && this.touchStartX < 50) {
         // Swipe right from left edge - open menu
-        this.isMobileMenuOpen = true;
+        this.isMobileMenuOpen.set(true);
         document.body.style.overflow = 'hidden';
-      } else if (deltaX < 0 && this.isMobileMenuOpen) {
+      } else if (deltaX < 0 && this.isMobileMenuOpen()) {
         // Swipe left when menu is open - close menu
         this.closeMobileMenu();
       }

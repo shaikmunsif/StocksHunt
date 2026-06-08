@@ -152,7 +152,7 @@ export class DialogComponent {
   readonly isSidebarCollapsed = computed(() => this.layoutService.isSidebarCollapsed());
   readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
 
-  open<T extends object>(component: Type<T>, data?: Partial<T>): ComponentRef<T> | undefined {
+  open<T extends object>(component: Type<T>, data?: Record<string, unknown>): ComponentRef<T> | undefined {
     this.isOpen.set(true);
 
     // Wait for view to update so contentHost is available
@@ -161,11 +161,21 @@ export class DialogComponent {
       this.componentRef = this.contentHost.createComponent(component);
 
       if (data && this.componentRef.instance) {
-        Object.assign(this.componentRef.instance, data);
+        Object.entries(data).forEach(([key, value]) => {
+          this.componentRef!.setInput(key, value);
+        });
       }
     });
 
     return this.componentRef as ComponentRef<T> | undefined;
+  }
+
+  updateContentInputs(data: Record<string, unknown>): void {
+    if (this.componentRef) {
+      Object.entries(data).forEach(([key, value]) => {
+        this.componentRef!.setInput(key, value);
+      });
+    }
   }
 
   readonly close = () => {

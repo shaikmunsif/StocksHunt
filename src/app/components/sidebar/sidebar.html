@@ -4,11 +4,11 @@
   <button
     (click)="toggleMobileMenu()"
     class="mobile-hamburger"
-    [attr.aria-label]="isMobileMenuOpen ? 'Close menu' : 'Open menu'"
-    [attr.aria-expanded]="isMobileMenuOpen"
+    [attr.aria-label]="isMobileMenuOpen() ? 'Close menu' : 'Open menu'"
+    [attr.aria-expanded]="isMobileMenuOpen()"
   >
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      @if (!isMobileMenuOpen) {
+      @if (!isMobileMenuOpen()) {
       <path
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -36,14 +36,14 @@
 </div>
 
 <!-- Mobile Backdrop -->
-@if (isMobileMenuOpen) {
+@if (isMobileMenuOpen()) {
 <div class="mobile-backdrop" (click)="closeMobileMenu()" [@fadeIn]></div>
 }
 
 <div
   class="sidebar-container"
   [class.collapsed]="isCollapsed"
-  [class.mobile-open]="isMobileMenuOpen"
+  [class.mobile-open]="isMobileMenuOpen()"
 >
   <!-- Desktop Toggle Button (hidden on mobile) -->
   <button
