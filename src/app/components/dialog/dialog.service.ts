@@ -74,7 +74,7 @@ export class DialogService {
     this.appRef.attachView(this.dialogComponentRef.hostView);
   }
 
-  open<T extends object>(component: Type<T>, data?: Partial<T>) {
+  open<T extends object>(component: Type<T>, data?: Record<string, unknown>) {
     if (!this.dialogComponentRef) {
       this.createDialogComponent();
     }
@@ -83,6 +83,10 @@ export class DialogService {
 
   close() {
     this.dialogComponentRef?.instance.close();
+  }
+
+  updateInputs(data: Record<string, unknown>) {
+    this.dialogComponentRef?.instance.updateContentInputs(data);
   }
 
   // Note: Service providedIn: 'root' lives for app lifetime; explicit teardown is handled via DestroyRef

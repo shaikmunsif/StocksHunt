@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
@@ -24,27 +24,21 @@ export class GainersViewThresholdComponent implements OnInit {
   private readonly dialogService = inject(DialogService);
   readonly breakpointService = inject(BreakpointService);
 
-  isLoading = false;
-  loadingProgress = 0;
-  error: string | null = null;
-  availableDates: string[] = [];
+  isLoading = signal(false);
+  loadingProgress = signal(0);
+  error = signal<string | null>(null);
+  availableDates = signal<string[]>([]);
 
-  repeatThreshold = 1;
-  exchangeMode: 'all' | 'one' | 'none' = 'all';
-  selectedExchange = 'NSE';
+  repeatThreshold = signal(1);
+  exchangeMode = signal<'all' | 'one' | 'none'>('all');
+  selectedExchange = signal('NSE');
   readonly exchanges = ['NSE', 'BSE'];
 
-  repeatedCompanies: GroupedCompanyOccurrence[] = [];
-  private exchangesCache: Exchange[] = [];
+  repeatedCompanies = signal<GroupedCompanyOccurrence[]>([]);
+  exchangesCache = signal<Exchange[]>([]);
 
-  sortColumn:
-    | 'ticker_symbol'
-    | 'name'
-    | 'current_price'
-    | 'average_change'
-    | 'category'
-    | 'occurrence_count' = 'occurrence_count';
-  sortDirection: 'asc' | 'desc' = 'desc';
+  sortColumn = signal<'ticker_symbol' | 'name' | 'current_price' | 'average_change' | 'category' | 'occurrence_count'>('occurrence_count');
+  sortDirection = signal<'asc' | 'desc'>('desc');
 
   getCategoryClass(categoryName?: string): string {
     const isAvoid = categoryName === 'Avoid';
@@ -66,49 +60,46 @@ export class GainersViewThresholdComponent implements OnInit {
 
   async loadAvailableDates(): Promise<void> {
     try {
-      // Load exchanges for ID lookup
-      this.exchangesCache = await this.databaseService.getExchanges();
+      this.exchangesCache.set(await this.databaseService.getExchanges());
       await this.loadMarketData();
     } catch (err) {
       console.error('Error loading initial data:', err);
-      this.error = 'Unable to load exchanges. Please try again later.';
+      this.error.set('Unable to load exchanges. Please try again later.');
     }
   }
 
   async loadMarketData(): Promise<void> {
-    this.isLoading = true;
-    this.loadingProgress = 0;
-    this.error = null;
+    this.isLoading.set(true);
+    this.loadingProgress.set(0);
+    this.error.set(null);
 
     try {
-      this.loadingProgress = 20;
+      this.loadingProgress.set(20);
 
-      // Get exchange ID if filtering by specific exchange
       let exchangeId: number | undefined;
-      if (this.exchangeMode === 'one') {
-        const exchange = this.exchangesCache.find((e) => e.code === this.selectedExchange);
+      if (this.exchangeMode() === 'one') {
+        const exchange = this.exchangesCache().find((e) => e.code === this.selectedExchange());
         exchangeId = exchange?.id;
       }
 
-      this.loadingProgress = 40;
+      this.loadingProgress.set(40);
 
-      // Single API call using the optimized view!
-      this.repeatedCompanies = await this.databaseService.getCompanyMarketSummary(
-        this.repeatThreshold,
+      const companies = await this.databaseService.getCompanyMarketSummary(
+        this.repeatThreshold(),
         exchangeId
       );
 
-      this.loadingProgress = 80;
+      this.loadingProgress.set(80);
 
-      this.sortData(this.repeatedCompanies);
-      this.loadingProgress = 100;
+      this.repeatedCompanies.set(this.sortDataToArray(companies));
+      this.loadingProgress.set(100);
     } catch (err) {
       console.error('Error loading threshold market data:', err);
-      this.error = 'Failed to load market data. Please retry in a moment.';
-      this.repeatedCompanies = [];
+      this.error.set('Failed to load market data. Please retry in a moment.');
+      this.repeatedCompanies.set([]);
     } finally {
-      this.isLoading = false;
-      this.loadingProgress = 0;
+      this.isLoading.set(false);
+      this.loadingProgress.set(0);
     }
   }
 
@@ -117,54 +108,53 @@ export class GainersViewThresholdComponent implements OnInit {
   }
 
   onExchangeModeChange(): void {
-    if (this.exchangeMode !== 'one') {
-      this.selectedExchange = 'NSE';
+    if (this.exchangeMode() !== 'one') {
+      this.selectedExchange.set('NSE');
     }
     this.loadMarketData();
   }
 
   onExchangeChange(): void {
-    if (this.exchangeMode === 'one') {
+    if (this.exchangeMode() === 'one') {
       this.loadMarketData();
     }
   }
 
-  onSort(column: typeof this.sortColumn): void {
-    if (this.sortColumn === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  onSort(column: 'ticker_symbol' | 'name' | 'current_price' | 'average_change' | 'category' | 'occurrence_count'): void {
+    if (this.sortColumn() === column) {
+      this.sortDirection.update(d => d === 'asc' ? 'desc' : 'asc');
     } else {
-      this.sortColumn = column;
-      this.sortDirection = this.getDefaultSortDirection(column);
+      this.sortColumn.set(column);
+      this.sortDirection.set(this.getDefaultSortDirection(column));
     }
 
-    this.sortData(this.repeatedCompanies);
+    this.repeatedCompanies.update(companies => this.sortDataToArray([...companies]));
   }
 
-  /**
-   * Returns the default sort direction for a column based on user expectations.
-   * Numeric columns default to descending (highest first), text columns to ascending (A-Z).
-   */
-  private getDefaultSortDirection(column: typeof this.sortColumn): 'asc' | 'desc' {
+  private getDefaultSortDirection(column: string): 'asc' | 'desc' {
     switch (column) {
       case 'ticker_symbol':
       case 'name':
       case 'category':
-        return 'asc'; // Alphabetical columns: A-Z first
+        return 'asc';
       case 'current_price':
       case 'average_change':
       case 'occurrence_count':
-        return 'desc'; // Numeric columns: highest first
+        return 'desc';
       default:
         return 'asc';
     }
   }
 
-  private sortData(companies: GroupedCompanyOccurrence[]): void {
+  private sortDataToArray(companies: GroupedCompanyOccurrence[]): GroupedCompanyOccurrence[] {
+    const col = this.sortColumn();
+    const dir = this.sortDirection();
+
     companies.sort((a, b) => {
       let aValue: string | number = '';
       let bValue: string | number = '';
 
-      switch (this.sortColumn) {
+      switch (col) {
         case 'ticker_symbol':
           aValue = a.ticker_symbol;
           bValue = b.ticker_symbol;
@@ -193,21 +183,23 @@ export class GainersViewThresholdComponent implements OnInit {
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return this.sortDirection === 'asc'
+        return dir === 'asc'
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
 
       const numericComparison = Number(aValue) - Number(bValue);
-      return this.sortDirection === 'asc' ? numericComparison : -numericComparison;
+      return dir === 'asc' ? numericComparison : -numericComparison;
     });
+
+    return companies;
   }
 
-  getSortIcon(column: typeof this.sortColumn): string {
-    if (this.sortColumn !== column) {
+  getSortIcon(column: string): string {
+    if (this.sortColumn() !== column) {
       return 'M7 11l5-5m0 0l5 5m-5-5v12';
     }
-    return this.sortDirection === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7';
+    return this.sortDirection() === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7';
   }
 
   formatPrice(price?: number): string {
@@ -227,9 +219,9 @@ export class GainersViewThresholdComponent implements OnInit {
   }
 
   getExchangeModeLabel(): string {
-    switch (this.exchangeMode) {
+    switch (this.exchangeMode()) {
       case 'one':
-        return this.selectedExchange;
+        return this.selectedExchange();
       case 'none':
         return 'No Exchange Filter';
       default:
@@ -238,7 +230,7 @@ export class GainersViewThresholdComponent implements OnInit {
   }
 
   async exportToCSV(): Promise<void> {
-    if (!this.repeatedCompanies.length) {
+    if (!this.repeatedCompanies().length) {
       alert('No data available to export.');
       return;
     }
@@ -253,7 +245,7 @@ export class GainersViewThresholdComponent implements OnInit {
       'Comments',
     ];
 
-    const rows = this.repeatedCompanies.map((company) => [
+    const rows = this.repeatedCompanies().map((company) => [
       company.ticker_symbol,
       company.name ?? 'N/A',
       this.formatPrice(company.latestPrice),
@@ -271,7 +263,7 @@ export class GainersViewThresholdComponent implements OnInit {
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `gainers_grouped_${this.exchangeMode}_threshold${this.repeatThreshold}.csv`;
+    anchor.download = `gainers_grouped_${this.exchangeMode()}_threshold${this.repeatThreshold()}.csv`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -286,10 +278,6 @@ export class GainersViewThresholdComponent implements OnInit {
     return company.ticker_symbol;
   }
 
-  /**
-   * Toggles the expanded state of a company's comment section.
-   * Using a method ensures proper change detection.
-   */
   toggleExpanded(company: GroupedCompanyOccurrence): void {
     company.expanded = !company.expanded;
   }
@@ -301,17 +289,19 @@ export class GainersViewThresholdComponent implements OnInit {
       tickerSymbol: company.ticker_symbol,
       comment: '',
       onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
-        const list = this.repeatedCompanies;
-        const idx = list.findIndex(
-          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
-        );
-        if (idx >= 0) {
-          const updated: GroupedCompanyOccurrence = {
-            ...list[idx],
-            comments: update.comments?.trim() || '',
-          };
-          this.repeatedCompanies = [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
-        }
+        this.repeatedCompanies.update(list => {
+          const idx = list.findIndex(
+            (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+          );
+          if (idx >= 0) {
+            const updated: GroupedCompanyOccurrence = {
+              ...list[idx],
+              comments: update.comments?.trim() || '',
+            };
+            return [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
+          }
+          return list;
+        });
       },
     });
   }
@@ -323,25 +313,26 @@ export class GainersViewThresholdComponent implements OnInit {
       tickerSymbol: company.ticker_symbol,
       comment: company.comments || '',
       onSave: (update: { companyId: string; tickerSymbol: string; comments: string }) => {
-        const list = this.repeatedCompanies;
-        const idx = list.findIndex(
-          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
-        );
-        if (idx >= 0) {
-          const updated: GroupedCompanyOccurrence = {
-            ...list[idx],
-            comments: update.comments?.trim() || '',
-          };
-          this.repeatedCompanies = [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
-        }
+        this.repeatedCompanies.update(list => {
+          const idx = list.findIndex(
+            (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+          );
+          if (idx >= 0) {
+            const updated: GroupedCompanyOccurrence = {
+              ...list[idx],
+              comments: update.comments?.trim() || '',
+            };
+            return [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
+          }
+          return list;
+        });
       },
     });
   }
 
   editRow(company: GroupedCompanyOccurrence, index: number): void {
-    // Create occurrence counts map for navigation
     const occurrenceCounts = new Map<string, number>();
-    this.repeatedCompanies.forEach((c) => {
+    this.repeatedCompanies().forEach((c) => {
       occurrenceCounts.set(c.ticker_symbol, c.occurrenceCount || 0);
     });
 
@@ -361,30 +352,28 @@ export class GainersViewThresholdComponent implements OnInit {
         categoryName: string | null;
         comments: string;
       }) => {
-        const list = this.repeatedCompanies;
-        const idxToUpdate = list.findIndex(
-          (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
-        );
-        if (idxToUpdate >= 0) {
-          const current = list[idxToUpdate];
-          const updated: GroupedCompanyOccurrence = {
-            ...current,
-            comments: update.comments?.trim() || '',
-            category:
-              update.categoryName !== null
-                ? current.category
-                  ? { ...current.category, name: update.categoryName }
-                  : undefined
-                : undefined,
-          };
-          this.repeatedCompanies = [
-            ...list.slice(0, idxToUpdate),
-            updated,
-            ...list.slice(idxToUpdate + 1),
-          ];
-        }
+        this.repeatedCompanies.update(list => {
+          const idx = list.findIndex(
+            (c) => c.id === update.companyId || c.ticker_symbol === update.tickerSymbol
+          );
+          if (idx >= 0) {
+            const current = list[idx];
+            const updated: GroupedCompanyOccurrence = {
+              ...current,
+              comments: update.comments?.trim() || '',
+              category:
+                update.categoryName !== null
+                  ? current.category
+                    ? { ...current.category, name: update.categoryName }
+                    : undefined
+                  : undefined,
+            };
+            return [...list.slice(0, idx), updated, ...list.slice(idx + 1)];
+          }
+          return list;
+        });
       },
-      companiesList: this.repeatedCompanies,
+      companiesList: this.repeatedCompanies(),
       currentIndex: index,
       occurrenceCounts: occurrenceCounts,
     });

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, input, inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
@@ -29,14 +29,15 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
       </div>
       <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
         <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
-          {{ comment ? 'Edit Comment' : 'Add Comment' }}
+          {{ comment() ? 'Edit Comment' : 'Add Comment' }}
         </h3>
         <div class="mt-2">
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Add a note for {{ companyName }} ({{ tickerSymbol }}).
+            Add a note for {{ companyName() }} ({{ tickerSymbol() }}).
           </p>
           <textarea
-            [(ngModel)]="commentText"
+            [ngModel]="commentText()"
+            (ngModelChange)="commentText.set($event)"
             rows="4"
             class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm text-base border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-3 sm:py-2"
             placeholder="Enter your comment here..."
@@ -90,14 +91,14 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
   `,
 })
 export class CommentModalComponent implements OnInit, OnDestroy {
-  // Inputs
-  companyId!: string;
-  companyName!: string;
-  tickerSymbol!: string;
-  comment: string = '';
-  onSave!: (update: { companyId: string; tickerSymbol: string; comments: string }) => void;
+  // Signal inputs
+  companyId = input.required<string>();
+  companyName = input.required<string>();
+  tickerSymbol = input.required<string>();
+  comment = input<string>('');
+  onSave = input.required<(update: { companyId: string; tickerSymbol: string; comments: string }) => void>();
 
-  commentText: string = '';
+  commentText = signal<string>('');
   isSaving = signal(false);
   saveMessage = signal<ToastMessage | null>(null);
 
@@ -107,7 +108,7 @@ export class CommentModalComponent implements OnInit, OnDestroy {
   private databaseService = inject(DatabaseService);
 
   ngOnInit() {
-    this.commentText = this.comment || '';
+    this.commentText.set(this.comment() || '');
   }
 
   ngOnDestroy() {
@@ -119,49 +120,43 @@ export class CommentModalComponent implements OnInit, OnDestroy {
   async save() {
     if (this.isSaving()) return;
 
-    if (!this.commentText.trim() && this.comment) {
+    if (!this.commentText().trim() && this.comment()) {
       if (!confirm('Are you sure you want to erase this comment?')) {
         return;
       }
     }
 
     this.isSaving.set(true);
-    this.saveMessage.set(null); // Clear previous messages
+    this.saveMessage.set(null);
 
     try {
-      await this.databaseService.updateCompanyComment(this.companyId, this.commentText);
-      if (this.onSave)
-        this.onSave({
-          companyId: this.companyId,
-          tickerSymbol: this.tickerSymbol,
-          comments: this.commentText,
+      await this.databaseService.updateCompanyComment(this.companyId(), this.commentText());
+      const saveFn = this.onSave();
+      if (saveFn)
+        saveFn({
+          companyId: this.companyId(),
+          tickerSymbol: this.tickerSymbol(),
+          comments: this.commentText(),
         });
 
-      // Show success message
       this.saveMessage.set({
         type: 'success',
         message: 'Comment saved successfully!',
       });
 
-      // Auto-hide only for success
       if (this.messageTimeout) {
         clearTimeout(this.messageTimeout);
       }
       this.messageTimeout = window.setTimeout(() => {
         this.saveMessage.set(null);
       }, this.AUTO_HIDE_DURATION);
-
-      // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
       console.error('Error saving comment:', error);
 
-      // Show error message
       this.saveMessage.set({
         type: 'error',
         message: 'Failed to save comment. Please try again.',
       });
-
-      // Keep error message visible until user acts (no auto-hide)
     } finally {
       this.isSaving.set(false);
     }

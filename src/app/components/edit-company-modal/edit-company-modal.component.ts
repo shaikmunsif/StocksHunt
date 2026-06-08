@@ -2,6 +2,7 @@ import {
   Component,
   inject,
   signal,
+  input,
   OnInit,
   OnDestroy,
   ViewChild,
@@ -35,17 +36,17 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
         <div class="flex items-center gap-4">
           <div
             class="flex items-center justify-center h-12 w-12 rounded-full"
-            [class.bg-red-100]="categoryValue === 'Avoid'"
-            [class.dark:bg-red-900]="categoryValue === 'Avoid'"
-            [class.bg-blue-100]="categoryValue !== 'Avoid'"
-            [class.dark:bg-blue-900]="categoryValue !== 'Avoid'"
+            [class.bg-red-100]="categoryValue() === 'Avoid'"
+            [class.dark:bg-red-900]="categoryValue() === 'Avoid'"
+            [class.bg-blue-100]="categoryValue() !== 'Avoid'"
+            [class.dark:bg-blue-900]="categoryValue() !== 'Avoid'"
           >
             <svg
               class="h-6 w-6"
-              [class.text-red-600]="categoryValue === 'Avoid'"
-              [class.dark:text-red-300]="categoryValue === 'Avoid'"
-              [class.text-blue-600]="categoryValue !== 'Avoid'"
-              [class.dark:text-blue-300]="categoryValue !== 'Avoid'"
+              [class.text-red-600]="categoryValue() === 'Avoid'"
+              [class.dark:text-red-300]="categoryValue() === 'Avoid'"
+              [class.text-blue-600]="categoryValue() !== 'Avoid'"
+              [class.dark:text-blue-300]="categoryValue() !== 'Avoid'"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -63,9 +64,9 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white" id="modal-title">
               Edit Company Details
             </h3>
-            @if (companiesList.length > 0) {
+            @if (companiesList().length > 0) {
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
-              {{ currentIndex + 1 }} / {{ companiesList.length }}
+              {{ currentIndex() + 1 }} / {{ companiesList().length }}
             </span>
             }
           </div>
@@ -81,33 +82,33 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Ticker:</span>
             <a
               class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"
-              [href]="'https://www.screener.in/company/' + tickerSymbol"
+              [href]="'https://www.screener.in/company/' + tickerSymbol()"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {{ tickerSymbol }}
+              {{ tickerSymbol() }}
             </a>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Company:</span>
             <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-              companyName
+              companyName()
             }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Current Price:</span>
             <span class="text-sm font-semibold text-gray-900 dark:text-white">{{
-              currentPrice
+              currentPrice()
             }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Change:</span>
-            <span class="text-sm font-semibold" [class]="changeClass">{{ percentageChange }}</span>
+            <span class="text-sm font-semibold" [class]="changeClass()">{{ percentageChange() }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Occurrences:</span>
             <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{
-              occurrenceCount
+              occurrenceCount()
             }}</span>
           </div>
         </div>
@@ -299,7 +300,8 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
           </label>
           <select
             id="category"
-            [(ngModel)]="categoryValue"
+            [ngModel]="categoryValue()"
+            (ngModelChange)="categoryValue.set($event)"
             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 h-12 sm:h-auto sm:py-2"
           >
             <option value="">-- Select Category --</option>
@@ -324,7 +326,8 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
           </label>
           <textarea
             id="comments"
-            [(ngModel)]="commentText"
+            [ngModel]="commentText()"
+            (ngModelChange)="commentText.set($event)"
             rows="4"
             placeholder="Add notes or observations about this company..."
             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm text-base border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-3 sm:py-2"
@@ -341,7 +344,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
     >
       <!-- Navigation Buttons (Left side) -->
       <div class="flex gap-2 mb-3 sm:mb-0">
-        @if (currentIndex > 0) {
+        @if (currentIndex() > 0) {
         <button
           type="button"
           (click)="navigatePrevious()"
@@ -359,7 +362,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
           </svg>
           Previous
         </button>
-        } @if (currentIndex < companiesList.length - 1) {
+        } @if (currentIndex() < companiesList().length - 1) {
         <button
           type="button"
           (click)="navigateNext()"
@@ -426,30 +429,29 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
 export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('priceChart') priceChartRef!: ElementRef<HTMLCanvasElement>;
 
-  // Inputs
-  companyId!: string;
-  companyName!: string;
-  tickerSymbol!: string;
-  currentPrice!: string;
-  percentageChange!: string;
-  changeClass!: string;
-  occurrenceCount!: number;
-  category: string = '';
-  comment: string = '';
-  onSave!: (update: {
+  // Signal inputs (receive from dialog via setInput)
+  companyId = input.required<string>();
+  companyName = input.required<string>();
+  tickerSymbol = input.required<string>();
+  currentPrice = input<string>('');
+  percentageChange = input<string>('');
+  changeClass = input<string>('');
+  occurrenceCount = input<number>(0);
+  category = input<string>('');
+  comment = input<string>('');
+  onSave = input.required<(update: {
     companyId: string;
     tickerSymbol: string;
     categoryName: string | null;
     comments: string;
-  }) => void;
+  }) => void>();
+  companiesList = input<(CompanyWithMarketData | GroupedCompanyOccurrence)[]>([]);
+  currentIndex = input<number>(0);
+  occurrenceCounts = input<Map<string, number>>(new Map());
 
-  // Navigation properties
-  companiesList: (CompanyWithMarketData | GroupedCompanyOccurrence)[] = [];
-  currentIndex: number = 0;
-  occurrenceCounts: Map<string, number> = new Map();
-
-  categoryValue: string = '';
-  commentText: string = '';
+  // Mutable state signals
+  categoryValue = signal('');
+  commentText = signal('');
   isSaving = signal(false);
   isLoadingChart = signal(true);
   historicalData = signal<MarketData[]>([]);
@@ -467,9 +469,8 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   readonly categoryStore = inject(CategoryStore);
 
   async ngOnInit() {
-    this.categoryValue = this.category || '';
-    this.commentText = this.comment || '';
-    // Load categories on init (non-blocking)
+    this.categoryValue.set(this.category() || '');
+    this.commentText.set(this.comment() || '');
     this.categoryStore.loadCategories();
     this.loadHistoricalData();
   }
@@ -487,14 +488,14 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
     // Chart will be created after data loads
   }
 
-  async loadHistoricalData() {
+  async loadHistoricalData(companyIdOverride?: string) {
     this.isLoadingChart.set(true);
     try {
-      const data = await this.databaseService.getCompanyHistoricalData(this.companyId);
+      const id = companyIdOverride ?? this.companyId();
+      const data = await this.databaseService.getCompanyHistoricalData(id);
       this.historicalData.set(data);
       this.isLoadingChart.set(false);
 
-      // Wait for the DOM to update and ViewChild to be available
       setTimeout(() => {
         if (data.length > 0) {
           this.createChart();
@@ -512,7 +513,6 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
       return;
     }
 
-    // Dynamically import Chart.js only when needed
     const { Chart, registerables } = await import('chart.js');
     Chart.register(...registerables);
 
@@ -670,23 +670,19 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   async save() {
     if (this.isSaving()) return;
 
-    // Confirm if clearing both fields
-    if (!this.commentText.trim() && !this.categoryValue.trim() && (this.comment || this.category)) {
+    if (!this.commentText().trim() && !this.categoryValue().trim() && (this.comment() || this.category())) {
       if (!confirm('Are you sure you want to clear both category and comments?')) {
         return;
       }
     }
 
     this.isSaving.set(true);
-    this.saveMessage.set(null); // Clear previous messages
+    this.saveMessage.set(null);
 
     try {
-      // Resolve chosen category name from existing categories only
-      const chosenName = this.categoryValue.trim();
+      const chosenName = this.categoryValue().trim();
 
-      // Update category
       if (chosenName) {
-        // Ensure categories are available before resolving by name
         if (!this.categoryStore.loaded()) {
           await this.categoryStore.loadCategories();
         }
@@ -699,49 +695,40 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
           this.isSaving.set(false);
           return;
         }
-        await this.databaseService.updateCompanyCategory(this.companyId, cat.id);
+        await this.databaseService.updateCompanyCategory(this.companyId(), cat.id);
       } else {
-        // Clear category if empty
-        await this.databaseService.updateCompanyCategory(this.companyId, null);
+        await this.databaseService.updateCompanyCategory(this.companyId(), null);
       }
 
-      // Update comments
-      await this.databaseService.updateCompanyComment(this.companyId, this.commentText.trim());
+      await this.databaseService.updateCompanyComment(this.companyId(), this.commentText().trim());
 
-      // Update parent component
-      if (this.onSave)
-        this.onSave({
-          companyId: this.companyId,
-          tickerSymbol: this.tickerSymbol,
+      const saveFn = this.onSave();
+      if (saveFn)
+        saveFn({
+          companyId: this.companyId(),
+          tickerSymbol: this.tickerSymbol(),
           categoryName: chosenName || null,
-          comments: this.commentText.trim(),
+          comments: this.commentText().trim(),
         });
 
-      // Show success message
       this.saveMessage.set({
         type: 'success',
         message: 'Changes saved successfully!',
       });
 
-      // Auto-hide only for success
       if (this.messageTimeout) {
         clearTimeout(this.messageTimeout);
       }
       this.messageTimeout = window.setTimeout(() => {
         this.saveMessage.set(null);
       }, this.AUTO_HIDE_DURATION);
-
-      // DO NOT close the dialog - keep it open for further edits
     } catch (error) {
       console.error('Error saving company details:', error);
 
-      // Show error message
       this.saveMessage.set({
         type: 'error',
         message: 'Failed to save changes. Please try again.',
       });
-
-      // Keep error message visible until user acts (no auto-hide)
     } finally {
       this.isSaving.set(false);
     }
@@ -752,23 +739,26 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   navigateNext(): void {
-    if (this.currentIndex < this.companiesList.length - 1) {
-      this.currentIndex++;
-      this.loadCompanyData(this.companiesList[this.currentIndex]);
+    const index = this.currentIndex();
+    const list = this.companiesList();
+    if (index < list.length - 1) {
+      const newIndex = index + 1;
+      const company = list[newIndex];
+      this.navigateToCompany(company, newIndex);
     }
   }
 
   navigatePrevious(): void {
-    if (this.currentIndex > 0) {
-      this.currentIndex--;
-      this.loadCompanyData(this.companiesList[this.currentIndex]);
+    const index = this.currentIndex();
+    const list = this.companiesList();
+    if (index > 0) {
+      const newIndex = index - 1;
+      const company = list[newIndex];
+      this.navigateToCompany(company, newIndex);
     }
   }
 
-  private loadCompanyData(company: CompanyWithMarketData | GroupedCompanyOccurrence): void {
-    this.companyId = company.id;
-    this.companyName = company.name;
-    this.tickerSymbol = company.ticker_symbol;
+  private navigateToCompany(company: CompanyWithMarketData | GroupedCompanyOccurrence, newIndex: number): void {
     const currentPrice =
       'market_data' in company
         ? company.market_data?.current_price
@@ -777,27 +767,37 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
       'market_data' in company
         ? company.market_data?.percentage_change
         : (company as GroupedCompanyOccurrence).averageChange;
-    this.currentPrice = this.formatPrice(currentPrice);
-    this.percentageChange = this.formatChange(percentChange);
-    this.changeClass = this.getChangeClass(percentChange);
-    this.occurrenceCount = this.occurrenceCounts.get(company.ticker_symbol) || 0;
-    this.categoryValue = company.category?.name || '';
-    this.commentText = company.comments || '';
-    this.category = company.category?.name || '';
-    this.comment = company.comments || '';
 
-    // Collapse accordion on navigation
+    this.dialogService.updateInputs({
+      companyId: company.id,
+      companyName: company.name,
+      tickerSymbol: company.ticker_symbol,
+      currentPrice: this.formatPrice(currentPrice),
+      percentageChange: this.formatChange(percentChange),
+      changeClass: this.getChangeClass(percentChange),
+      occurrenceCount: this.occurrenceCounts().get(company.ticker_symbol) || 0,
+      category: company.category?.name || '',
+      comment: company.comments || '',
+      currentIndex: newIndex,
+    });
+
+    this.categoryValue.set(company.category?.name || '');
+    this.commentText.set(company.comments || '');
     this.isHistoryTableExpanded.set(false);
 
-    // Reload historical data for new company
-    this.loadHistoricalData();
+    // Destroy old chart before loading new data
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = undefined;
+    }
+
+    this.loadHistoricalData(company.id);
   }
 
   toggleHistoryTable(): void {
     this.isHistoryTableExpanded.update((v) => !v);
   }
 
-  // Touch event handlers for mobile swipe navigation
   onTouchStart(event: TouchEvent): void {
     this.touchStartX = event.touches[0].clientX;
     this.touchStartY = event.touches[0].clientY;
@@ -812,13 +812,10 @@ export class EditCompanyModalComponent implements OnInit, AfterViewInit, OnDestr
     const deltaX = touchEndX - this.touchStartX;
     const deltaY = touchEndY - this.touchStartY;
 
-    // Check if horizontal swipe is dominant (more horizontal than vertical)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      if (deltaX > 0 && this.currentIndex > 0) {
-        // Swipe right - go to previous
+      if (deltaX > 0) {
         this.navigatePrevious();
-      } else if (deltaX < 0 && this.currentIndex < this.companiesList.length - 1) {
-        // Swipe left - go to next
+      } else if (deltaX < 0) {
         this.navigateNext();
       }
     }

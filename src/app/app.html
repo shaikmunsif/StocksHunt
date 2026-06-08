@@ -22,7 +22,7 @@
       [class.mobile-padding-top]="authService.isAuthenticated()"
     >
       <!-- Shimmer loader for lazy-loaded components -->
-      @if (isLoadingRoute) {
+      @if (isLoadingRoute()) {
         <app-shimmer-loader type="full-page" [rows]="8"></app-shimmer-loader>
       } @else {
         <router-outlet></router-outlet>
