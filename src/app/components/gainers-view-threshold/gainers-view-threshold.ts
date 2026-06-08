@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { BreakpointService } from '../../services/breakpoint.service';
@@ -17,6 +17,7 @@ import {
   selector: 'app-gainers-view-threshold',
   imports: [FormsModule, ShimmerLoaderComponent],
   templateUrl: './gainers-view-threshold.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./gainers-view-threshold.scss'],
 })
 export class GainersViewThresholdComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { IconsComponent } from '../svg';
 
 export interface ToastMessage {
@@ -9,6 +9,7 @@ export interface ToastMessage {
 @Component({
   selector: 'app-toast-message',
   imports: [IconsComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (message()) {
     <div class="mt-4 w-full animate-slide-up" role="alert" aria-live="polite" aria-atomic="true">

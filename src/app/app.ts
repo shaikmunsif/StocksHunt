@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   Router,
   RouterOutlet,
@@ -19,6 +19,7 @@ import { ShimmerLoaderComponent } from './components/shimmer-loader/shimmer-load
   selector: 'app-root',
   imports: [RouterOutlet, SidebarComponent, ThemeToggleComponent, ShimmerLoaderComponent],
   templateUrl: './app.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
 })
 export class App {
