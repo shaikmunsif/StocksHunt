@@ -1,9 +1,10 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-icon',
   imports: [],
   templateUrl: './icons.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./icons.component.scss'],
 })
 export class IconsComponent {

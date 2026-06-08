@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { IconsComponent } from '../svg/icons';
 import { ThemeService } from '../../services/theme.service';
 
@@ -24,6 +24,7 @@ import { ThemeService } from '../../services/theme.service';
       </span>
     </button>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       :host {

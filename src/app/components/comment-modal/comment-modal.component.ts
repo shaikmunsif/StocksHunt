@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, input, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, input, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
 import { DatabaseService } from '../../services/database.service';
@@ -7,6 +7,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
 @Component({
   selector: 'app-comment-modal',
   imports: [FormsModule, ToastMessageComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="sm:flex sm:items-start">
       <div

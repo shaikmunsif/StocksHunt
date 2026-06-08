@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, HostListener, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../../services/stock.service';
@@ -8,6 +8,7 @@ import { StockGainersResponse } from '../../interfaces/stock-data.interface';
   selector: 'app-stock-data-entry',
   imports: [FormsModule, DatePipe],
   templateUrl: './stock-data-entry.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './stock-data-entry.scss',
 })
 export class StockDataEntryComponent implements OnInit, OnDestroy {

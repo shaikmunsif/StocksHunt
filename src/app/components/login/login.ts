@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -7,6 +7,7 @@ import { IconsComponent } from '../svg/icons';
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule, RouterModule, IconsComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './login.html',
 })
 export class LoginComponent {

@@ -7,6 +7,7 @@ import {
   inject,
   signal,
   computed,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { LayoutService } from '../../services/layout.service';
 import { AuthService } from '../../services/auth.service';
@@ -87,6 +88,7 @@ import { AuthService } from '../../services/auth.service';
     </div>
     }
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [
     `
       .mobile-dialog-wrapper {

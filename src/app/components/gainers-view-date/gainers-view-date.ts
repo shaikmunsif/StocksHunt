@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
@@ -19,6 +19,7 @@ import {
   selector: 'app-gainers-view-date',
   imports: [FormsModule, DatePipe, ShimmerLoaderComponent],
   templateUrl: './gainers-view-date.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./gainers-view-date.scss'],
 })
 export class GainersViewDateComponent implements OnInit, OnDestroy {

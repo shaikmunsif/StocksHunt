@@ -8,6 +8,7 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../dialog/dialog.service';
@@ -26,6 +27,7 @@ import { ToastMessageComponent, ToastMessage } from '../toast-message/toast-mess
 @Component({
   selector: 'app-edit-company-modal',
   imports: [FormsModule, ToastMessageComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
       class="max-h-[85vh] overflow-y-auto"

@@ -1,9 +1,10 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-shimmer-loader',
   imports: [],
   templateUrl: './shimmer-loader.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './shimmer-loader.component.scss',
 })
 export class ShimmerLoaderComponent {
