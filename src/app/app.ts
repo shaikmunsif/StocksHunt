@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import {
   Router,
   RouterOutlet,
@@ -28,19 +28,19 @@ export class App {
   themeService = inject(ThemeService);
   layoutService = inject(LayoutService);
   router = inject(Router);
-  isLoadingRoute = false;
+  isLoadingRoute = signal(false);
 
   constructor() {
     // Listen to router events to show shimmer during lazy loading
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event instanceof NavigationStart) {
-        this.isLoadingRoute = true;
+        this.isLoadingRoute.set(true);
       } else if (
         event instanceof NavigationEnd ||
         event instanceof NavigationCancel ||
         event instanceof NavigationError
       ) {
-        this.isLoadingRoute = false;
+        this.isLoadingRoute.set(false);
       }
     });
   }
