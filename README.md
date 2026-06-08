@@ -1,37 +1,38 @@
-# 📊 StockGainers
+# StockGainers
 
-> A professional Angular 20+ application for analyzing stock market performance data with advanced filtering, data visualization, and comprehensive export capabilities.
+> A professional Angular 21 application for analyzing stock market performance data with advanced filtering, data visualization, and comprehensive export capabilities.
 
-[![Angular](https://img.shields.io/badge/Angular-20.3-DD0031?logo=angular)](https://angular.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Angular](https://img.shields.io/badge/Angular-21.2-DD0031?logo=angular)](https://angular.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-2.81-3ECF8E?logo=supabase)](https://supabase.com/)
 
-## ✨ Features
+## Features
 
-- 🔐 **Secure Authentication** - Supabase-powered auth with JWT sessions
-- 📊 **Dual Analysis Views** - Date-wise and threshold-based stock analysis
-- 📈 **Interactive Charts** - Historical price visualization with Chart.js (lazy-loaded)
-- 🎨 **Dark Mode** - Complete theme system with localStorage persistence
-- 📱 **Fully Responsive** - Mobile-first design with touch optimization
-- 🚀 **Performance Optimized** - 40% bundle reduction through lazy loading
-- 🎯 **Type-Safe** - Complete TypeScript coverage with strict mode
-- 💾 **CSV Export** - Export filtered data with current state
-- 🔄 **Real-Time Updates** - Live data synchronization with Supabase
-- ✏️ **Interactive Modals** - Edit company details with swipe navigation
+- **Secure Authentication** - Supabase-powered auth with JWT sessions
+- **Dual Analysis Views** - Date-wise and threshold-based stock analysis
+- **Interactive Charts** - Historical price visualization with Chart.js (lazy-loaded)
+- **Dark Mode** - Complete theme system with localStorage persistence
+- **Fully Responsive** - Mobile-first design with touch optimization
+- **Zoneless Change Detection** - Fully signal-based reactivity, no Zone.js
+- **Performance Optimized** - Route-based lazy loading with dynamic imports
+- **Type-Safe** - Complete TypeScript coverage with strict mode
+- **CSV Export** - Export filtered data with current state
+- **Interactive Modals** - Edit company details with swipe navigation
 
-## 🏗️ Technology Stack
+## Technology Stack
 
-- **Frontend**: Angular 20+ (Standalone Components)
+- **Frontend**: Angular 21 (Standalone Components, Zoneless)
 - **UI Framework**: Tailwind CSS 3.x
-- **State Management**: Angular Signals & RxJS
+- **State Management**: Angular Signals & @ngrx/signals
+- **Change Detection**: Zoneless (`provideZonelessChangeDetection`)
 - **Authentication**: Supabase Auth
 - **Database**: Supabase PostgreSQL with RLS & RPC functions
 - **Charts**: Chart.js 4.x (dynamically imported)
-- **Build Tool**: Angular CLI with optimization
+- **Build Tool**: Angular CLI with esbuild
 - **TypeScript**: Strict mode enabled
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -75,32 +76,30 @@ npm run build
 npm run preview
 ```
 
-## 📦 Bundle Optimization
+## Bundle Optimization
 
-Our application uses advanced optimization techniques:
-
-- **Initial Bundle**: ~559 kB (down from 942 kB - 40% reduction)
+- **Initial Bundle**: ~534 kB
 - **Lazy Chunks**:
   - Chart.js: 205 kB (loaded on-demand)
   - Route components: 12-35 kB each
 - **Optimization Strategies**:
   - Route-based lazy loading with `loadComponent()`
   - Dynamic Chart.js import (type-only imports)
-  - Optimized CSS bundles
+  - Zoneless change detection (no Zone.js overhead)
   - Tree-shaking and dead code elimination
   - Optimized RPC functions for single API calls
 
-## 🎯 Key Features Explained
+## Key Features Explained
 
-### 🔐 Authentication System
+### Authentication System
 
 - Email/password authentication with Supabase
 - JWT-based session management
 - Email confirmation flow
-- Protected routes with guards
+- Protected routes with functional guards
 - Automatic logout on session expiry
 
-### 📊 Analysis Views
+### Analysis Views
 
 #### Date-Wise Analysis
 
@@ -118,88 +117,72 @@ Our application uses advanced optimization techniques:
 - Exchange filtering modes (All, Specific, None)
 - Single API call with server-side filtering
 
-### 📈 Interactive Modals
+### Interactive Modals
 
 - Edit company categories and comments
 - Historical price charts (Chart.js)
 - Previous/Next navigation
 - Mobile swipe gestures
-- Real-time data updates
+- Real-time data updates via signals
 
-### 🎨 Theme System
+### Theme System
 
 - Global dark/light mode toggle
 - Persistent theme preference
 - Smooth transitions
 - System preference detection
-- Optimized for both themes
 
-## 📱 Mobile Experience
+## Mobile Experience
 
 - **Responsive Navigation**: Hamburger menu with swipe gestures
 - **Touch-Optimized**: 48px minimum tap targets
 - **Card Layouts**: Mobile-friendly data display
 - **Swipe Navigation**: Sidebar and modal swipe support
 - **Adaptive Forms**: 16px font size (prevents zoom)
-- **Performance**: Optimized rendering for mobile devices
 
-## 🏛️ Architecture
+## Architecture
 
 ```
 src/app/
 ├── components/
-│   ├── sidebar/              # Navigation with swipe gestures
-│   ├── dashboard/            # Main landing page
-│   ├── gainers-view-date/    # Date-wise analysis
-│   ├── gainers-view-threshold/ # Threshold analysis
-│   ├── stock-data-entry/     # Stock data entry & management
-│   ├── login/               # Authentication
-│   ├── register/            # User registration
-│   ├── dialog/              # Modal system
-│   ├── edit-company-modal/  # Company details editor
-│   └── theme-toggle/        # Theme switcher
+│   ├── sidebar/                    # Navigation with swipe gestures
+│   ├── gainers-view-date/          # Date-wise analysis
+│   ├── gainers-view-threshold/     # Threshold analysis
+│   ├── stock-data-entry/           # Stock data entry & management
+│   ├── login/                      # Authentication
+│   ├── register/                   # User registration
+│   ├── dialog/                     # Modal system (setInput-based)
+│   ├── edit-company-modal/         # Company editor with navigation
+│   ├── comment-modal/              # Comments editor
+│   ├── shimmer-loader/             # Loading skeleton
+│   ├── toast-message/              # Notifications
+│   └── theme-toggle/               # Theme switcher
 ├── services/
-│   ├── auth.service.ts      # Authentication logic
-│   ├── database.service.ts  # Data operations
-│   ├── theme.service.ts     # Theme management
-│   ├── stock.service.ts     # Stock data handling
-│   ├── breakpoint.service.ts # Responsive utilities
-│   └── layout.service.ts    # Layout state
+│   ├── auth.service.ts             # Authentication (signal-based)
+│   ├── database.service.ts         # Data operations
+│   ├── stock.service.ts            # Stock data handling
+│   ├── theme.service.ts            # Theme management
+│   ├── breakpoint.service.ts       # Responsive utilities
+│   ├── layout.service.ts           # Layout state
+│   └── dialog.service.ts           # Modal management
 ├── guards/
-│   ├── auth.guard.ts        # Route protection
-│   └── dashboard.guard.ts   # Dashboard access
+│   ├── auth.guard.ts               # Functional route guard
+│   └── dashboard.guard.ts          # Functional route guard
 ├── interfaces/
-│   └── stock-data.interface.ts # Type definitions
-├── app.routes.ts            # Lazy-loaded routes
-└── main.ts                  # Application bootstrap
+│   └── stock-data.interface.ts     # Type definitions
+├── stores/
+│   ├── category.store.ts           # @ngrx/signals category state
+│   └── company.store.ts            # @ngrx/signals company state
+├── utils/
+│   └── format.utils.ts             # Shared formatters
+├── shared/
+│   └── index.ts                    # Barrel exports
+├── app.routes.ts                   # Lazy-loaded routes
+├── app.config.ts                   # Zoneless app configuration
+└── app.ts                          # Root component
 ```
 
-## 🎨 Code Scaffolding
-
-Generate new components using Angular CLI:
-
-```bash
-# Generate a standalone component
-ng generate component component-name --standalone
-
-# Generate a service
-ng generate service services/service-name
-
-# Generate an interface
-ng generate interface interfaces/interface-name
-```
-
-## 🧪 Testing
-
-```bash
-# Run unit tests
-ng test
-
-# Run e2e tests (configure framework first)
-ng e2e
-```
-
-## 🔧 Configuration
+## Configuration
 
 ### Tailwind CSS
 
@@ -216,14 +199,6 @@ module.exports = {
 };
 ```
 
-### Angular Build
-
-Configure in `angular.json`:
-
-- Budget optimization settings
-- Production configurations
-- Asset management
-
 ### Environment Variables
 
 Set up in `.env`:
@@ -233,15 +208,14 @@ SUPABASE_URL=your_project_url
 SUPABASE_KEY=your_anon_key
 ```
 
-## 📊 Performance
+## Performance
 
-- **Lighthouse Score**: 90+ (Performance, Accessibility, Best Practices)
-- **First Contentful Paint**: < 1.5s
-- **Time to Interactive**: < 3s
-- **Bundle Size**: 560 kB initial (optimized)
+- **Initial Bundle**: 534 kB
 - **Lazy Loading**: All routes and Chart.js
+- **Change Detection**: Zoneless — signal writes automatically trigger CD
+- **RPC Optimization**: Reduced API calls from 101 to 2 (for 50 companies)
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -249,40 +223,43 @@ SUPABASE_KEY=your_anon_key
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 Best Practices Implemented
+## Best Practices Implemented
 
-- ✅ Standalone components (default in Angular 20+)
-- ✅ Angular Signals for reactive state
-- ✅ Signal inputs (`input()` function)
-- ✅ Functional guards (`CanActivateFn`)
-- ✅ `inject()` function for dependency injection
-- ✅ Modern control flow (`@if`, `@for`, `@switch`)
-- ✅ Granular imports (no `CommonModule`)
-- ✅ Lazy loading with `loadComponent()`
-- ✅ Dynamic imports for heavy libraries (Chart.js)
-- ✅ TypeScript strict mode with no `any` types
-- ✅ Mobile-first responsive design
-- ✅ Shared utilities for DRY code
-- ✅ Proper memory leak prevention (`DestroyRef`)
+- Standalone components (default in Angular 21)
+- Zoneless change detection with `provideZonelessChangeDetection()`
+- Angular Signals for all reactive state (no `ChangeDetectorRef`)
+- Signal inputs (`input()` / `input.required()`)
+- `computed()` for derived state
+- Functional guards (`CanActivateFn`)
+- `inject()` function for dependency injection
+- Modern control flow (`@if`, `@for`, `@switch`)
+- Granular imports (no `CommonModule`)
+- Lazy loading with `loadComponent()`
+- Dynamic imports for heavy libraries (Chart.js)
+- TypeScript strict mode
+- `@ngrx/signals` for shared entity stores
+- Shared utilities for DRY code
+- Proper cleanup (`DestroyRef`, `OnDestroy`)
 
-## 📚 Documentation
+## Documentation
 
 - [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) - Comprehensive project documentation
 - [docs/archive/](./docs/archive/) - Historical documentation and changelogs
 
-## 🔗 Resources
+## Resources
 
 - [Angular Documentation](https://angular.dev/)
-- [Angular CLI Reference](https://angular.dev/tools/cli)
+- [Angular Zoneless Guide](https://angular.dev/guide/zoneless)
+- [Angular Signals](https://angular.dev/guide/signals)
 - [Tailwind CSS Documentation](https://tailwindcss.com/)
 - [Supabase Documentation](https://supabase.com/docs)
 - [Chart.js Documentation](https://www.chartjs.org/)
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
-## 👤 Author
+## Author
 
 **Shaik Munsif**
 
@@ -290,4 +267,4 @@ This project is licensed under the MIT License.
 
 ---
 
-**Built with ❤️ using Angular 20 and modern web technologies**
+Built with Angular 21 (zoneless) and modern web technologies.

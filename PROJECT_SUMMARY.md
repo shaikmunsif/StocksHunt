@@ -1,43 +1,59 @@
-# 📊 StockGainers - Project Summary
+# StockGainers - Project Summary
 
-> **Last Updated:** December 2, 2025  
-> **Angular Version:** 20.x  
-> **Status:** Production Ready ✅
+> **Last Updated:** June 8, 2026
+> **Angular Version:** 21.x
+> **Change Detection:** Zoneless (Signals only)
+> **Status:** Production Ready
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 StockGainers is a professional Angular application for analyzing stock market performance data. It provides advanced filtering, data visualization, interactive modals with navigation, and comprehensive export capabilities.
 
 ### Key Features
 
-- 🔐 **Authentication** - Supabase-powered auth with JWT sessions
-- 📊 **Dual Analysis Views** - Date-wise and threshold-based stock analysis
-- 📈 **Interactive Charts** - Historical price visualization with Chart.js (lazy-loaded)
-- 🎨 **Theme System** - Dark/light mode with localStorage persistence
-- 📱 **Fully Responsive** - Mobile-first design with touch optimization
-- 💾 **CSV Export** - Export filtered data with current state
-- ✏️ **Interactive Modals** - Edit company details with swipe navigation
+- **Authentication** - Supabase-powered auth with JWT sessions
+- **Dual Analysis Views** - Date-wise and threshold-based stock analysis
+- **Interactive Charts** - Historical price visualization with Chart.js (lazy-loaded)
+- **Zoneless** - Fully signal-based change detection, no Zone.js dependency
+- **Theme System** - Dark/light mode with localStorage persistence
+- **Fully Responsive** - Mobile-first design with touch optimization
+- **CSV Export** - Export filtered data with current state
+- **Interactive Modals** - Edit company details with swipe navigation
 
 ---
 
-## 🏗️ Technology Stack
+## Technology Stack
 
-| Category      | Technology                          |
-| ------------- | ----------------------------------- |
-| **Framework** | Angular 20+ (Standalone Components) |
-| **UI**        | Tailwind CSS 3.x                    |
-| **State**     | Angular Signals & RxJS              |
-| **Auth**      | Supabase Auth                       |
-| **Database**  | Supabase PostgreSQL with RLS & RPC  |
-| **Charts**    | Chart.js 4.x (dynamic import)       |
-| **Build**     | Angular CLI with esbuild            |
-| **Language**  | TypeScript (strict mode)            |
+| Category              | Technology                                     |
+| --------------------- | ---------------------------------------------- |
+| **Framework**         | Angular 21 (Standalone Components, Zoneless)   |
+| **Change Detection**  | `provideZonelessChangeDetection()` — no Zone.js |
+| **UI**                | Tailwind CSS 3.x                               |
+| **State**             | Angular Signals & @ngrx/signals                |
+| **Auth**              | Supabase Auth                                  |
+| **Database**          | Supabase PostgreSQL with RLS & RPC             |
+| **Charts**            | Chart.js 4.x (dynamic import)                  |
+| **Build**             | Angular CLI with esbuild                       |
+| **Language**          | TypeScript 5.9 (strict mode)                   |
 
 ---
 
-## 📁 Project Structure
+## Zoneless Architecture
+
+The application runs without Zone.js. All change detection is driven by Angular signals:
+
+- **`signal()`** for mutable component state
+- **`computed()`** for derived values
+- **`input()` / `input.required()`** for component inputs (replaces `@Input()`)
+- **`provideZonelessChangeDetection()`** in app config enables signal-scheduled CD
+- Signal writes inside `async/await`, `setTimeout`, `setInterval`, and Promise callbacks automatically trigger change detection
+- Dynamic component data passing uses `componentRef.setInput()` instead of `Object.assign`
+
+---
+
+## Project Structure
 
 ```
 src/app/
@@ -48,15 +64,15 @@ src/app/
 │   ├── stock-data-entry/           # Stock data entry & management
 │   ├── login/                      # Authentication
 │   ├── register/                   # User registration
-│   ├── dialog/                     # Modal system
-│   ├── edit-company-modal/         # Company editor
+│   ├── dialog/                     # Modal system (setInput-based)
+│   ├── edit-company-modal/         # Company editor with navigation
 │   ├── comment-modal/              # Comments editor
 │   ├── shimmer-loader/             # Loading skeleton
 │   ├── toast-message/              # Notifications
 │   ├── theme-toggle/               # Theme switcher
 │   └── svg/icons/                  # Icon components
 ├── services/
-│   ├── auth.service.ts             # Authentication
+│   ├── auth.service.ts             # Authentication (signal-based state)
 │   ├── database.service.ts         # Data operations
 │   ├── stock.service.ts            # Stock data handling
 │   ├── theme.service.ts            # Theme management
@@ -64,25 +80,76 @@ src/app/
 │   ├── layout.service.ts           # Layout state
 │   └── dialog.service.ts           # Modal management
 ├── guards/
-│   ├── auth.guard.ts               # Login/register protection
-│   └── dashboard.guard.ts          # Dashboard protection
+│   ├── auth.guard.ts               # Functional route guard
+│   └── dashboard.guard.ts          # Functional route guard
 ├── interfaces/
 │   └── stock-data.interface.ts     # Type definitions
 ├── stores/
-│   ├── category.store.ts           # Category state
-│   └── company.store.ts            # Company state
+│   ├── category.store.ts           # @ngrx/signals category state
+│   └── company.store.ts            # @ngrx/signals company state
 ├── utils/
 │   └── format.utils.ts             # Shared formatters
 ├── shared/
 │   └── index.ts                    # Barrel exports
 ├── app.routes.ts                   # Lazy-loaded routes
-├── app.config.ts                   # App configuration
+├── app.config.ts                   # Zoneless app configuration
 └── app.ts                          # Root component
 ```
 
 ---
 
-## 🎨 Modern Angular Patterns
+## Modern Angular Patterns
+
+### Zoneless Change Detection
+
+```typescript
+// app.config.ts
+providers: [
+  provideZonelessChangeDetection(),
+  provideRouter(routes),
+  // ...
+]
+```
+
+### Signal-Based State
+
+```typescript
+export class GainersViewDateComponent {
+  marketData = signal<MarketDataResponse | null>(null);
+  isLoading = signal(false);
+  maxDate = signal('');
+  maxDateKey = computed(() => this.toDateKey(this.maxDate()));
+
+  async loadMarketData(): Promise<void> {
+    this.isLoading.set(true);
+    const data = await this.databaseService.getMarketDataByDate(this.selectedDate());
+    this.marketData.set(data);
+    this.isLoading.set(false);
+    // No ChangeDetectorRef needed — signal writes trigger CD
+  }
+}
+```
+
+### Signal Inputs
+
+```typescript
+export class CommentModalComponent {
+  readonly companyId = input.required<string>();
+  readonly companyName = input.required<string>();
+  readonly comment = input<string>('');
+  commentText = signal<string>('');
+}
+```
+
+### Modern Control Flow
+
+```html
+@if (isLoading()) {
+  <app-shimmer-loader type="table" [rows]="10"></app-shimmer-loader>
+} @for (company of marketData()?.companies ?? []; track company.ticker_symbol) {
+  <tr>{{ company.name }}</tr>
+}
+```
 
 ### Functional Guards
 
@@ -99,27 +166,6 @@ export const dashboardGuard: CanActivateFn = () => {
 };
 ```
 
-### Signal Inputs
-
-```typescript
-@Component({ ... })
-export class ToastMessageComponent {
-  readonly message = input<ToastMessage | null>(null);
-}
-```
-
-### Modern Control Flow
-
-```html
-@if (isLoading) {
-<app-shimmer-loader type="table" [rows]="10"></app-shimmer-loader>
-} @for (company of companies; track company.id) {
-<tr>
-  {{ company.name }}
-</tr>
-}
-```
-
 ### Inject Function
 
 ```typescript
@@ -132,7 +178,7 @@ export class SidebarComponent {
 
 ---
 
-## 📊 Analysis Views
+## Analysis Views
 
 ### Date-Wise Analysis (`/analysis/date-wise`)
 
@@ -154,7 +200,7 @@ export class SidebarComponent {
 
 ---
 
-## 📱 Responsive Design
+## Responsive Design
 
 ### Breakpoints
 
@@ -162,7 +208,7 @@ export class SidebarComponent {
 | ----------- | -------------- | ---------------------------- |
 | **Mobile**  | < 640px        | Card layouts, hamburger menu |
 | **Tablet**  | 640px - 1023px | Adaptive layouts             |
-| **Desktop** | ≥ 1024px       | Full sidebar, table views    |
+| **Desktop** | >= 1024px      | Full sidebar, table views    |
 
 ### Mobile Features
 
@@ -174,12 +220,12 @@ export class SidebarComponent {
 
 ---
 
-## 🔧 Key Services
+## Key Services
 
 ### AuthService
 
 - Supabase integration with JWT
-- Session management with signals
+- Signal-based session management (`currentUser` signal)
 - Email confirmation flow
 - Logout with state cleanup
 
@@ -191,6 +237,12 @@ export class SidebarComponent {
 - Category management
 - SECURITY INVOKER for automatic RLS enforcement
 
+### DialogService
+
+- `setInput()`-based data passing for signal input compatibility
+- `updateInputs()` method for modal navigation
+- Dynamic component creation with proper lifecycle
+
 ### BreakpointService
 
 - Signal-based responsive detection
@@ -199,11 +251,11 @@ export class SidebarComponent {
 
 ---
 
-## 📦 Bundle Optimization
+## Bundle Optimization
 
 | Bundle           | Size     | Strategy                 |
 | ---------------- | -------- | ------------------------ |
-| **Initial**      | ~559 kB  | Route-based splitting    |
+| **Initial**      | ~534 kB  | Route-based splitting    |
 | **Chart.js**     | 205 kB   | Dynamic import on-demand |
 | **Route chunks** | 12-35 kB | Lazy loading             |
 
@@ -215,7 +267,7 @@ export class SidebarComponent {
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
@@ -223,13 +275,10 @@ npm install
 
 # Development server
 npm start
-# → http://localhost:4200/
+# -> http://localhost:4200/
 
 # Production build
 npm run build
-
-# Run tests
-npm test
 ```
 
 ### Environment Setup
@@ -243,7 +292,7 @@ SUPABASE_KEY=your_supabase_anon_key
 
 ---
 
-## 🗺️ Routes
+## Routes
 
 | Route                 | Component                     | Guard          |
 | --------------------- | ----------------------------- | -------------- |
@@ -255,7 +304,7 @@ SUPABASE_KEY=your_supabase_anon_key
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 | Document                         | Description              |
 | -------------------------------- | ------------------------ |
@@ -264,10 +313,10 @@ SUPABASE_KEY=your_supabase_anon_key
 
 ---
 
-## 👤 Author
+## Author
 
 **Shaik Munsif** - [@shaikmunsif](https://github.com/shaikmunsif)
 
 ---
 
-**Built with ❤️ using Angular 20 and modern web technologies**
+Built with Angular 21 (zoneless) and modern web technologies.
